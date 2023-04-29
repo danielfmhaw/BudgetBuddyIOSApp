@@ -11,6 +11,14 @@
 		32009B3F29FD42C200D4296E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32009B3E29FD42C200D4296E /* ContentView.swift */; };
 		32009B4129FD42C300D4296E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 32009B4029FD42C300D4296E /* Assets.xcassets */; };
 		32009B4429FD42C300D4296E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 32009B4329FD42C300D4296E /* Preview Assets.xcassets */; };
+		32009B4C29FD42EC00D4296E /* ChartDemo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32009B4B29FD42EC00D4296E /* ChartDemo.swift */; };
+		32009B4E29FD42FC00D4296E /* MainScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32009B4D29FD42FC00D4296E /* MainScreen.swift */; };
+		32009B5029FD431000D4296E /* AddNewActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32009B4F29FD431000D4296E /* AddNewActivity.swift */; };
+		32009B5229FD432600D4296E /* EditActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32009B5129FD432600D4296E /* EditActivity.swift */; };
+		32009B5429FD434000D4296E /* SettingsScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32009B5329FD434000D4296E /* SettingsScreen.swift */; };
+		32009B5629FD435100D4296E /* OverviewScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32009B5529FD435100D4296E /* OverviewScreen.swift */; };
+		32009B5829FD436200D4296E /* AnalyseScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32009B5729FD436200D4296E /* AnalyseScreen.swift */; };
+		32009B5A29FD448900D4296E /* PieChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32009B5929FD448900D4296E /* PieChart.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +27,14 @@
 		32009B3E29FD42C200D4296E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		32009B4029FD42C300D4296E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		32009B4329FD42C300D4296E /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		32009B4B29FD42EC00D4296E /* ChartDemo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChartDemo.swift; sourceTree = "<group>"; };
+		32009B4D29FD42FC00D4296E /* MainScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainScreen.swift; sourceTree = "<group>"; };
+		32009B4F29FD431000D4296E /* AddNewActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddNewActivity.swift; sourceTree = "<group>"; };
+		32009B5129FD432600D4296E /* EditActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditActivity.swift; sourceTree = "<group>"; };
+		32009B5329FD434000D4296E /* SettingsScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsScreen.swift; sourceTree = "<group>"; };
+		32009B5529FD435100D4296E /* OverviewScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewScreen.swift; sourceTree = "<group>"; };
+		32009B5729FD436200D4296E /* AnalyseScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyseScreen.swift; sourceTree = "<group>"; };
+		32009B5929FD448900D4296E /* PieChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PieChart.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +71,14 @@
 				32009B3E29FD42C200D4296E /* ContentView.swift */,
 				32009B4029FD42C300D4296E /* Assets.xcassets */,
 				32009B4229FD42C300D4296E /* Preview Content */,
+				32009B4B29FD42EC00D4296E /* ChartDemo.swift */,
+				32009B4D29FD42FC00D4296E /* MainScreen.swift */,
+				32009B4F29FD431000D4296E /* AddNewActivity.swift */,
+				32009B5129FD432600D4296E /* EditActivity.swift */,
+				32009B5329FD434000D4296E /* SettingsScreen.swift */,
+				32009B5529FD435100D4296E /* OverviewScreen.swift */,
+				32009B5729FD436200D4296E /* AnalyseScreen.swift */,
+				32009B5929FD448900D4296E /* PieChart.swift */,
 			);
 			path = BudgetBuddy;
 			sourceTree = "<group>";
@@ -137,8 +161,16 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				32009B4E29FD42FC00D4296E /* MainScreen.swift in Sources */,
+				32009B5429FD434000D4296E /* SettingsScreen.swift in Sources */,
+				32009B4C29FD42EC00D4296E /* ChartDemo.swift in Sources */,
+				32009B5829FD436200D4296E /* AnalyseScreen.swift in Sources */,
 				32009B3F29FD42C200D4296E /* ContentView.swift in Sources */,
 				32009B3D29FD42C200D4296E /* BudgetBuddyApp.swift in Sources */,
+				32009B5229FD432600D4296E /* EditActivity.swift in Sources */,
+				32009B5629FD435100D4296E /* OverviewScreen.swift in Sources */,
+				32009B5029FD431000D4296E /* AddNewActivity.swift in Sources */,
+				32009B5A29FD448900D4296E /* PieChart.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
