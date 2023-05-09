@@ -15,6 +15,7 @@ struct Aktivitaet: Codable, Identifiable {
 struct Benutzer: Codable {
     var email: String
     var password: String
+    var name:String
     var geburtstag: String
     var kontostand: Double
     var buddyName: String
@@ -33,9 +34,14 @@ struct EinnahmenResponse: Decodable {
 
 //Login-In Seite
 struct ContentView: View {
-    @State private var email = ""
+    @State private var emailInput: String = ""
+    private var email: String {
+          emailInput.lowercased()
+      }
     @State private var password = ""
     @State private var showLoggedInView = false
+    @State private var loginFailed = false
+
 
     var body: some View {
         NavigationView {
@@ -46,11 +52,12 @@ struct ContentView: View {
                           .resizable()
                           .aspectRatio(contentMode: .fit)
                 
-                TextField("E-mail", text: $email)
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(5.0)
-                    .padding(.bottom, 20)
+                TextField("E-mail", text: $emailInput)
+                           .padding()
+                           .background(Color(.systemGray6))
+                           .cornerRadius(5.0)
+                           .padding(.bottom, 20)
+                           .autocapitalization(.none)
 
                 SecureField("Passwort", text: $password)
                     .padding()
@@ -58,33 +65,75 @@ struct ContentView: View {
                     .cornerRadius(5.0)
                     .padding(.bottom, 20)
 
-                Button(action: {
-                    authenticate()
-                })
-                {
-                    Text("Einloggen")
-                        .foregroundColor(.white)
-                        .padding(.vertical, 10)
-                        .frame(maxWidth: .infinity)
-                        .background(Color.blue)
-                        .cornerRadius(5.0)
+                if(!loginFailed){
+                    Button(action: {
+                        if authenticate() {
+                            showLoggedInView = true
+                        } else {
+                            loginFailed = true
+                        }
+                    })
+                    {
+                        Text("Einloggen")
+                            .foregroundColor(.white)
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity)
+                            .background(Color.blue)
+                            .cornerRadius(5.0)
+                    }
+                    .padding(.horizontal, 20)
+                    .fullScreenCover(isPresented: $showLoggedInView, content: {
+                        LoggedInView(email: email, logoutAction: logout)
+                    })
+                }else{
+                    Button(action: {
+                        if authenticate() {
+                            showLoggedInView = true
+                        } else {
+                            loginFailed = true
+                        }
+                    })
+                    {
+                        Text("Erneut Versuchen")
+                            .foregroundColor(.white)
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity)
+                            .background(Color.red)
+                            .cornerRadius(5.0)
+                    }
+                    .padding(.horizontal, 20)
+                    .fullScreenCover(isPresented: $showLoggedInView, content: {
+                        LoggedInView(email: email, logoutAction: logout)
+                    })
                 }
-                .padding(.horizontal, 20)
-                .sheet(isPresented: $showLoggedInView, content: {
-                    //Hier wird zum LoggedIn-View "verlinkt"
-                    LoggedInView(email: email, logoutAction: logout)
-                })
+                Divider()
+                
+                if loginFailed {
+                    NavigationLink(destination: RegistrationView()){
+                        Text("Registrieren")
+                    }
+                }
 
                 Spacer()
             }
             .padding(.horizontal, 20)
             .navigationBarTitle(Text("Login"), displayMode: .inline)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onAppear{
+                showLoggedInView = false
+                loginFailed = false
+                
+            }
+            .onDisappear {
+                emailInput = ""
+                password = ""
+            }
         }
     }
-
+    
+    
     // Zieht die Benutzerdaten aus Backend und überprüft, ob successful oder failed
-    func authenticate() {
+    func authenticate() -> Bool {
         let url = URL(string: "http://localhost:8080/api/v1/benutzer")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
@@ -92,24 +141,37 @@ struct ContentView: View {
         let parameters = ["email": email, "password": password]
         request.httpBody = try! JSONSerialization.data(withJSONObject: parameters)
         
+        var success = false
+        
+        let semaphore = DispatchSemaphore(value: 0)
+        
         URLSession.shared.dataTask(with: request) { data, response, error in
+            defer { semaphore.signal() }
+            
             guard let data = data, let response = response as? HTTPURLResponse, error == nil else {
                 print("Error: \(error?.localizedDescription ?? "Unknown error")")
                 return
             }
+            
             if response.statusCode == 200 {
                 // Authentication successful
-                DispatchQueue.main.async {
-                    self.showLoggedInView = true
-                }
+                success = true
             } else {
                 // Authentication failed
                 print("Authentication failed with status code \(response.statusCode)")
             }
         }.resume()
+        
+        semaphore.wait()
+        
+        return success
     }
+    
     func logout() {
         self.showLoggedInView = false
+        self.emailInput=""
+        self.password=""
+        self.loginFailed = false
     }
 }
 

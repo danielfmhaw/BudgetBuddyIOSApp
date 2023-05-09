@@ -24,7 +24,11 @@ struct AnaylseView: View {
     @State private var ausgaben: [Activity] = []
     
     @State private var selectedDisplayMode = 0
-    @State private var showBars = true
+    @State private var isLineGraph = false
+    
+    @State var currentActiveItemRevenue: Activity?
+    @State var currentActiveItemCost: Activity?
+    @State var plodWidth : CGFloat = 0
     
     var body: some View {
         VStack {
@@ -52,27 +56,77 @@ struct AnaylseView: View {
                 
                 VStack {
                     Text("Einnahmen")
+                        .font(.system(size: 18, weight: .bold))
+                    
                     Chart(einnahmen) { activity in
-                        if showBars {
-                            BarMark(
-                                x: .value("Jahr", activity.date),
-                                y: .value("Summe", activity.amount)
-                            )
-                            .foregroundStyle(Color.green.gradient)
-                        } else {
+                        if isLineGraph {
                             LineMark(
                                 x: .value("Jahr", activity.date),
                                 y: .value("Summe", activity.amount)
                             )
                             .foregroundStyle(Color.green.gradient)
+                        } else {
+                            BarMark(
+                                x: .value("Jahr", activity.date),
+                                y: .value("Summe", activity.amount)
+                            )
+                            .foregroundStyle(Color.green.gradient)
+                        }
+                        if let currentActiveItemRevenue,currentActiveItemRevenue.date == activity.date {
+                            RuleMark(x: .value("Date", currentActiveItemRevenue.date))
+                                //LineStyle
+                                .lineStyle(.init(lineWidth: 3, miterLimit: 3, dash:[7],dashPhase:5))
+                                .annotation(position: .top){
+                                    VStack(){
+                                        Text("\(currentActiveItemRevenue.date)")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                        
+                                        Text("Einnahmen: \(String(format: "%.1f", currentActiveItemRevenue.amount))")
+                                            .font(.system(size: 14, weight: .bold))
+                                    }
+                                    .padding(.horizontal,10)
+                                    .padding(.vertical,4)
+                                    .background{
+                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                            .fill(.white.shadow(.drop(radius:2)))
+                                    }
+                                }
                         }
                     }
+                    .chartOverlay(content: {proxy in
+                        GeometryReader{ innerproxy in
+                            Rectangle()
+                                .fill(.clear).contentShape(Rectangle())
+                                .gesture(
+                                    DragGesture()
+                                        .onChanged{ value in
+                                            //Getting current location
+                                            let location = value.location
+                                            
+                                            if let type:String = proxy.value(atX:location.x){
+                                                if let currentitem = einnahmen.first(where: {item in
+                                                    type == item.date
+                                                }){
+                                                    self.currentActiveItemRevenue = currentitem
+                                                    self.plodWidth = proxy.plotAreaSize.width
+                                                }
+                                            }
+                                        }.onEnded{ value in
+                                            self.currentActiveItemRevenue = nil
+                                        }
+                                )
+                            
+                        }
+                    })
                     .frame(height: 150)
                     .padding()
                     
                     Text("Ausgaben")
+                        .font(.system(size: 18, weight: .bold))
+                    
                     Chart(ausgaben) { activity in
-                        if showBars {
+                        if !isLineGraph {
                             BarMark(
                                 x: .value("Jahr", activity.date),
                                 y: .value("Summe", activity.amount)
@@ -85,16 +139,58 @@ struct AnaylseView: View {
                             )
                             .foregroundStyle(Color.red.gradient)
                         }
+                        if let currentActiveItemCost,currentActiveItemCost.date == activity.date {
+                            RuleMark(x: .value("Date", currentActiveItemCost.date))
+                                //LineStyle
+                                .lineStyle(.init(lineWidth: 3, miterLimit: 3, dash:[7],dashPhase:5))
+                                .annotation(position: .top){
+                                    VStack(){
+                                        Text("\(currentActiveItemCost.date)")
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                        
+                                        Text("Ausgaben: \(String(format: "%.1f", currentActiveItemCost.amount))")
+                                            .font(.system(size: 14, weight: .bold))
+                                    }
+                                    .padding(.horizontal,10)
+                                    .padding(.vertical,4)
+                                    .background{
+                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                            .fill(.white.shadow(.drop(radius:2)))
+                                    }
+                                }
+                        }
                     }
+                    .chartOverlay(content: {proxy in
+                        GeometryReader{ innerproxy in
+                            Rectangle()
+                                .fill(.clear).contentShape(Rectangle())
+                                .gesture(
+                                    DragGesture()
+                                        .onChanged{ value in
+                                            //Getting current location
+                                            let location = value.location
+                                            
+                                            if let type:String = proxy.value(atX:location.x){
+                                                if let currentitem = ausgaben.first(where: {item in
+                                                    type == item.date
+                                                }){
+                                                    self.currentActiveItemCost = currentitem
+                                                    self.plodWidth = proxy.plotAreaSize.width
+                                                }
+                                            }
+                                        }.onEnded{ value in
+                                            self.currentActiveItemCost = nil
+                                        }
+                                )
+                            
+                        }
+                    })
                     .frame(height: 150)
                     .padding()
                     
-                    Button(action: {
-                        showBars.toggle()
-                    }) {
-                        Text(showBars ? "Zur Linienansicht wechseln" : "Zur Balkenansicht wechseln")
-                            .padding()
-                    }
+                    Toggle("Liniendiagramm",isOn: $isLineGraph)
+                        .padding()
                 }
             }
         }

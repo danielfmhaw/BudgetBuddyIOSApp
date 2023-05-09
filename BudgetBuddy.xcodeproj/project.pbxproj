@@ -19,6 +19,10 @@
 		32009B5629FD435100D4296E /* OverviewScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32009B5529FD435100D4296E /* OverviewScreen.swift */; };
 		32009B5829FD436200D4296E /* AnalyseScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32009B5729FD436200D4296E /* AnalyseScreen.swift */; };
 		32009B5A29FD448900D4296E /* PieChart.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32009B5929FD448900D4296E /* PieChart.swift */; };
+		324C129729FEEC6D001A6A4D /* LimitAnalyse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 324C129629FEEC6D001A6A4D /* LimitAnalyse.swift */; };
+		32817A0D2A001DE400C6A8B0 /* RegistrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32817A0C2A001DE400C6A8B0 /* RegistrationView.swift */; };
+		32BBCBA72A0ABB52008E1CE7 /* Buddy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32BBCBA62A0ABB52008E1CE7 /* Buddy.swift */; };
+		32CD42D129FEBBD500B1AD77 /* Limit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 32CD42D029FEBBD500B1AD77 /* Limit.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -35,6 +39,10 @@
 		32009B5529FD435100D4296E /* OverviewScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OverviewScreen.swift; sourceTree = "<group>"; };
 		32009B5729FD436200D4296E /* AnalyseScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyseScreen.swift; sourceTree = "<group>"; };
 		32009B5929FD448900D4296E /* PieChart.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PieChart.swift; sourceTree = "<group>"; };
+		324C129629FEEC6D001A6A4D /* LimitAnalyse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LimitAnalyse.swift; sourceTree = "<group>"; };
+		32817A0C2A001DE400C6A8B0 /* RegistrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationView.swift; sourceTree = "<group>"; };
+		32BBCBA62A0ABB52008E1CE7 /* Buddy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Buddy.swift; sourceTree = "<group>"; };
+		32CD42D029FEBBD500B1AD77 /* Limit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Limit.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -79,6 +87,10 @@
 				32009B5529FD435100D4296E /* OverviewScreen.swift */,
 				32009B5729FD436200D4296E /* AnalyseScreen.swift */,
 				32009B5929FD448900D4296E /* PieChart.swift */,
+				32CD42D029FEBBD500B1AD77 /* Limit.swift */,
+				324C129629FEEC6D001A6A4D /* LimitAnalyse.swift */,
+				32817A0C2A001DE400C6A8B0 /* RegistrationView.swift */,
+				32BBCBA62A0ABB52008E1CE7 /* Buddy.swift */,
 			);
 			path = BudgetBuddy;
 			sourceTree = "<group>";
@@ -162,12 +174,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				32009B4E29FD42FC00D4296E /* MainScreen.swift in Sources */,
+				324C129729FEEC6D001A6A4D /* LimitAnalyse.swift in Sources */,
 				32009B5429FD434000D4296E /* SettingsScreen.swift in Sources */,
+				32817A0D2A001DE400C6A8B0 /* RegistrationView.swift in Sources */,
 				32009B4C29FD42EC00D4296E /* ChartDemo.swift in Sources */,
 				32009B5829FD436200D4296E /* AnalyseScreen.swift in Sources */,
+				32CD42D129FEBBD500B1AD77 /* Limit.swift in Sources */,
 				32009B3F29FD42C200D4296E /* ContentView.swift in Sources */,
 				32009B3D29FD42C200D4296E /* BudgetBuddyApp.swift in Sources */,
 				32009B5229FD432600D4296E /* EditActivity.swift in Sources */,
+				32BBCBA72A0ABB52008E1CE7 /* Buddy.swift in Sources */,
 				32009B5629FD435100D4296E /* OverviewScreen.swift in Sources */,
 				32009B5029FD431000D4296E /* AddNewActivity.swift in Sources */,
 				32009B5A29FD448900D4296E /* PieChart.swift in Sources */,

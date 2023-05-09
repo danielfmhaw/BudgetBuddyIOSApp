@@ -15,10 +15,12 @@ struct AddNewActivityView: View {
 
     @State var betrag: String = ""
     @State var beschreibung: String = ""
-    @State var kategorieIndex = 0
-    let kategorien = ["Lebensmittel", "Wohnen", "Sonstiges"]
+
+    @State private var selectedKategorie = "Lebensmittel"
+    let kategorien = ["Lebensmittel","Finanzen","Freizeit","Unterhaltung","Hobbys","Wohnen","Haushalt","Technik","Shopping","Restaurant","Drogerie","Sonstiges"]
     @State var datum = Date()
     @Environment(\.presentationMode) var presentationMode
+    
 
     var body: some View {
         NavigationView {
@@ -32,13 +34,14 @@ struct AddNewActivityView: View {
                     TextField("Beschreibung", text: $beschreibung)
                 }
 
-                Section(header: Text("Kategorie")) {
-                    Picker(selection: $kategorieIndex, label: Text("Kategorie")) {
-                        ForEach(0 ..< kategorien.count) { index in
-                            Text(kategorien[index])
-                        }
-                    }
-                    .pickerStyle(.segmented)
+                Section(header: Text("Kategorie")){
+                            Picker(selection: $selectedKategorie, label: Text("")) {
+                                ForEach(kategorien, id: \.self) { kategorie in
+                                    Text(kategorie)
+                                }
+                            }
+                            .pickerStyle(MenuPickerStyle())
+                            .padding(.leading, 16)
                 }
 
                 // Neue Section-Block hinzufügen, um das Datum anzuzeigen
@@ -53,11 +56,10 @@ struct AddNewActivityView: View {
 
                 Button(action: {
                     if let user = user, let betragDouble = Double(betrag), !beschreibung.isEmpty {
-                        let kategorie = kategorien[kategorieIndex]
                         let formatter = DateFormatter()
                         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
                         let dateString = formatter.string(from: datum)
-                        let newAktivitaet = Aktivitaet(id: 0, betrag: betragDouble, beschreibung: beschreibung, kategorie: kategorie, art: actart ?? "", benutzer: user, datum: dateString)
+                        let newAktivitaet = Aktivitaet(id: 0, betrag: betragDouble, beschreibung: beschreibung, kategorie: selectedKategorie, art: actart ?? "", benutzer: user, datum: dateString)
                         saveActivity(newAktivitaet)
                         presentationMode.wrappedValue.dismiss()
                     }
@@ -90,7 +92,7 @@ struct AddNewActivityView: View {
         request.httpBody = encodedActivity
 
         URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else {
+            guard let _ = data, error == nil else {
                 print("Error: \(error?.localizedDescription ?? "Unknown error")")
                 return
             }

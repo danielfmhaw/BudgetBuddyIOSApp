@@ -91,7 +91,7 @@ struct LoggedInView: View {
                         }
                         Divider()
                         HStack {
-                            NavigationLink(destination: AnaylseView(email: (email))) {
+                            NavigationLink(destination: AnaylseView(email: email)) {
                                 Image(systemName: "chart.bar.fill")
                                     .resizable()
                                     .frame(width: 24, height: 24)
@@ -103,6 +103,35 @@ struct LoggedInView: View {
                             }
                         }
                         Divider()
+                        HStack {
+                            if let user = user {
+                                NavigationLink(destination: LimitView(email: email, benutzer: user)) {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .resizable()
+                                        .frame(width: 24, height: 24)
+                                        .foregroundColor(.blue)
+                                    Text("Limits")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                        .padding(.leading, 8)
+                                }
+                            } else {
+                                Text("User is nil")
+                            }
+                        }
+                        Divider()
+                        HStack {
+                            NavigationLink(destination: LimitAnalyseView(email: email)) {
+                                Image(systemName: "chart.bar.doc.horizontal.fill")
+                                    .resizable()
+                                    .frame(width: 24, height: 24)
+                                    .foregroundColor(.blue)
+                                Text("Limit Anaylse")
+                                    .font(.headline)
+                                    .foregroundColor(.primary)
+                                    .padding(.leading, 8)
+                            }
+                        }
                         Spacer()
                     }
                     .padding()
@@ -355,6 +384,19 @@ struct LoggedInView: View {
                             .font(.headline)
                             .foregroundColor(.primary)
                             .padding(.leading, 8)
+                    }
+                    Divider()
+                    NavigationLink(destination: Buddy(email: email)) {
+                        HStack {
+                            Image(systemName: "lightbulb.circle")
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                                .foregroundColor(.blue)
+                            Text("Tipps")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                                .padding(.leading, 8)
+                        }
                     }
                     Divider()
                     Spacer()

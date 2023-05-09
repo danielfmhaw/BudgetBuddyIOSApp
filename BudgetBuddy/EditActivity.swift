@@ -13,16 +13,16 @@ struct EditActivityView: View {
     let activity: Aktivitaet
     @State var betrag: String
     @State var beschreibung: String
-    @State var kategorieIndex: Int
-    @State var datum: Date // neue State-Variable für das Datum
-    let kategorien = ["Lebensmittel", "Wohnen", "Sonstiges"]
+    @State var datum: Date
+    @State private var selectedKategorie : String
+    let kategorien = ["Lebensmittel","Finanzen","Freizeit","Unterhaltung","Hobbys","Wohnen","Haushalt","Technik","Shopping","Restaurant","Drogerie","Sonstiges"]
     @Environment(\.presentationMode) var presentationMode
     
     init(activity: Aktivitaet) {
         self.activity = activity
         self._betrag = State(initialValue: String(activity.betrag))
         self._beschreibung = State(initialValue: activity.beschreibung)
-        self._kategorieIndex = State(initialValue: kategorien.firstIndex(of: activity.kategorie) ?? 0)
+        self._selectedKategorie = State(initialValue: activity.kategorie)
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
         if let date = dateFormatter.date(from: activity.datum) {
@@ -50,16 +50,14 @@ struct EditActivityView: View {
                         }
                 }
                 
-                Section(header: Text("Kategorie")) {
-                    Picker(selection: $kategorieIndex, label: Text("Kategorie")) {
-                        ForEach(0 ..< kategorien.count) { index in
-                            Text(kategorien[index])
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .onAppear {
-                        kategorieIndex = kategorien.firstIndex(of: activity.kategorie) ?? 0
-                    }
+                Section(header: Text("Kategorie")){
+                            Picker(selection: $selectedKategorie, label: Text("")) {
+                                ForEach(kategorien, id: \.self) { kategorie in
+                                    Text(kategorie)
+                                }
+                            }
+                            .pickerStyle(MenuPickerStyle())
+                            .padding(.leading, 16)
                 }
                 
                 Section(header: Text("Datum")) { // neue Sektion für das Datum
@@ -75,7 +73,6 @@ struct EditActivityView: View {
                 
                 Button(action: {
                     if let betragDouble = Double(betrag), !beschreibung.isEmpty {
-                        let kategorie = kategorien[kategorieIndex]
                         let formatter = DateFormatter()
                         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
                         let dateString = formatter.string(from: datum)
@@ -83,7 +80,7 @@ struct EditActivityView: View {
                             id: activity.id,
                             betrag: betragDouble,
                             beschreibung: beschreibung,
-                            kategorie: kategorie,
+                            kategorie: selectedKategorie,
                             art: activity.art,
                             benutzer: activity.benutzer,
                             datum: dateString // Datum hinzufügen
@@ -129,7 +126,7 @@ struct EditActivityView: View {
         request.httpBody = encodedActivity
         
         URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let data = data, error == nil else {
+            guard let _ = data, error == nil else {
                 print("Error: \(error?.localizedDescription ?? "Unknown error")")
                 return
             }

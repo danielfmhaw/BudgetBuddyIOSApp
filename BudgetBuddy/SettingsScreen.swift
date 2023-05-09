@@ -28,6 +28,12 @@ struct BenutzerView: View {
                 }
                 
                 HStack(spacing: 5) {
+                    Text("Buddy-Name:")
+                    Text(benutzer.name)
+                        .font(.headline)
+                }
+                
+                HStack(spacing: 5) {
                     Text("Kontostand:")
                     Text(String(format: "%.2f €", benutzer.kontostand))
                         .font(.headline)

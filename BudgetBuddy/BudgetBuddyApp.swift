@@ -1,4 +1,5 @@
 //
+
 //  BudgetBuddyApp.swift
 //  BudgetBuddy
 //
@@ -6,6 +7,7 @@
 //
 
 import SwiftUI
+
 
 @main
 struct BudgetBuddyApp: App {
