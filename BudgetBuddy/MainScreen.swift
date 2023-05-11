@@ -359,7 +359,8 @@ struct LoggedInView: View {
             //NavigationView für die "Einstellungen" (aktuell wird nur zu BenutzerView verlinkt und es gibt einen deafault: "allgemein" und den Chat)
             NavigationView {
                 VStack(alignment: .leading) {
-                    NavigationLink(destination: BenutzerView(benutzer: user)) {
+                    NavigationLink(destination: BenutzerView(email: email))
+                    {
                         HStack {
                             Image(systemName: "person.circle")
                                 .resizable()

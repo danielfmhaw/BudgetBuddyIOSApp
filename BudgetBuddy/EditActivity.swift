@@ -60,6 +60,7 @@ struct EditActivityView: View {
                 
                 Section(header: Text("Datum")) {
                     DatePicker("Datum", selection: $datum, displayedComponents: [.date])
+                        //.datePickerStyle(WheelDatePickerStyle()) --> nimmt bisschen zu viel Platz weg
                         .onAppear {
                             let dateFormatter = DateFormatter()
                             dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
