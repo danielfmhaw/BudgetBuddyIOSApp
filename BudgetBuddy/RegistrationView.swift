@@ -1,3 +1,7 @@
+// Screen, indem sich Benutzer registrieren können
+//
+// Created by Daniel Mendes on 03.05.23.
+
 import SwiftUI
 
 struct RegistrationView: View {
@@ -17,14 +21,17 @@ struct RegistrationView: View {
     
     @Environment(\.presentationMode) var presentationMode
     
+    
     var body: some View {
         NavigationView {
+            // Einzelnen Inputs für die jeweiligen Attribute
             Form {
                 Section(header: Text("E-Mail")) {
                     TextField("E-Mail", text: $email)
                         .keyboardType(.emailAddress)
                         .overlay(invalidEmailError ? RoundedRectangle(cornerRadius: 5).stroke(Color.red) : nil)
                     
+                    // Wenn Email ungültig ist
                     if invalidEmailError {
                         Text("Invalid email")
                             .foregroundColor(.red)
@@ -39,6 +46,7 @@ struct RegistrationView: View {
                     SecureField("Confirm Password", text: $confirmPassword)
                         .overlay(passwordsDoNotMatchError ? RoundedRectangle(cornerRadius: 5).stroke(Color.red) : nil)
 
+                    // Wenn die Passwörter nicht übereinstimmen
                     if passwordsDoNotMatchError {
                         Text("Passwords do not match")
                             .foregroundColor(.red)
@@ -102,12 +110,12 @@ struct RegistrationView: View {
         self.presentationMode.wrappedValue.dismiss()
     }
     
+    // Überprüft, ob es sich um gültige Eingaben handelt
     func validateInputs() -> Bool {
-        // Reset error states
         invalidEmailError = false
         passwordsDoNotMatchError = false
         
-        // Check if email is valid
+        // Überprüfung, ob Email gültig ist
         let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
         let emailPredicate = NSPredicate(format: "SELF MATCHES %@", emailRegex)
         if !emailPredicate.evaluate(with: email) {
@@ -115,7 +123,7 @@ struct RegistrationView: View {
             return false
         }
     
-        // Check if password and confirmation match
+        // Überprüfung, ob Passwörter übereinstimmen
         if password != confirmPassword {
             passwordsDoNotMatchError = true
             return false
@@ -124,9 +132,10 @@ struct RegistrationView: View {
         return true
     }
 
+    // Benutzer werden im Backend gespeichert
     func sendToBackend() {
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ" // das gewünschte Datum-Format im Backend
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
         
         let benutzer = Benutzer(email: email, password: password,name: name, geburtstag: dateFormatter.string(from: geburtstag), kontostand: kontostand, buddyName: buddyName, lieblingsGegenstand: lieblingsGegenstand)
         print (benutzer)

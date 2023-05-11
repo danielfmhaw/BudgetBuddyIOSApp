@@ -1,13 +1,10 @@
+// Man kann hier Limits anzeigen, hinzufügen, editieren und löschen
 //
-//  Limit.swift
-//  BudgetBuddy
-//
-//  Created by Daniel Mendes on 30.04.23.
-//
+// Created by Daniel Mendes on 30.04.23.
 
 import SwiftUI
 
-
+// Struktur eines "Limits" (genauso wie im Backend gespeichert)
 struct Limit: Codable, Identifiable {
     var id: Int
     var kategorie: String
@@ -33,6 +30,7 @@ struct LimitView: View {
                     .padding(.top, 20)
 
                 if !limits.isEmpty {
+                    // Anzeige alle Limits für den Benutzer
                     List {
                         ForEach(limits, id: \.id) { limit in
                             HStack {
@@ -49,6 +47,7 @@ struct LimitView: View {
                                 }
                             }
                             .padding(.vertical, 10)
+                            // Löschen des ausgwählten Limits
                             .contextMenu {
                                 Button(action: {
                                     deleteLimit(id: limit.id)
@@ -61,12 +60,14 @@ struct LimitView: View {
                                 selectedLimit = limit
                             }
                         }
+                        // Löschen des ausgwählten Limits
                         .onDelete { indexSet in
                             for index in indexSet {
                                 deleteLimit(id: limits[index].id)
                             }
                         }
                     }
+                    // Editieren des ausgwählten Limits
                     .sheet(item: $selectedLimit) { limit in
                         EditLimitView(email: email, benutzer: benutzer, limit: limit, onDismiss: {
                             fetchLimits()
@@ -76,6 +77,7 @@ struct LimitView: View {
                     Text("Keine Limits gefunden")
                 }
             }
+            // HInzufügen eines Limits mit Button an oberer rechter Seite
             .navigationBarItems(trailing:
                 Button(action: {
                     isPresentingAddLimitView.toggle()
@@ -146,7 +148,7 @@ struct LimitView: View {
 
 }
 
-
+// Screen, wo man Limit hinzufügen kann
 struct AddLimitView: View {
     let email: String
     let benutzer: Benutzer
@@ -189,6 +191,7 @@ struct AddLimitView: View {
         }
     }
     
+    // Abspeichern des neuen Limits im Backend
     func saveLimit() {
         let betragDouble = Double(betrag)
         let newLimit = Limit(id: 0,kategorie: selectedKategorie,benutzer: benutzer, betrag: betragDouble ?? 0)
@@ -209,9 +212,8 @@ struct AddLimitView: View {
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let data = data {
-                if let decodedResponse = try? JSONDecoder().decode(Limit.self, from: data) {
+                if let _ = try? JSONDecoder().decode(Limit.self, from: data) {
                     DispatchQueue.main.async {
-                        // Do something with the decoded response
                     }
                     return
                 }
@@ -221,6 +223,7 @@ struct AddLimitView: View {
     }
 }
 
+// Screen, der geöffnet wird wenn man auf das jeweilige Limit drückt und dann kann man die Daten entsprechend verändern
 struct EditLimitView: View {
     let email: String
     let benutzer: Benutzer
@@ -259,6 +262,7 @@ struct EditLimitView: View {
         }
     }
     
+    // Speichert die veränderten Limits im Backend
     func updateLimit() {
         let betragDouble = Double(betrag)
         let updatedLimit = Limit(id: limit.id, kategorie: limit.kategorie, benutzer: benutzer, betrag: betragDouble ?? 0)
@@ -279,9 +283,8 @@ struct EditLimitView: View {
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let data = data {
-                if let decodedResponse = try? JSONDecoder().decode(Limit.self, from: data) {
+                if let _ = try? JSONDecoder().decode(Limit.self, from: data) {
                     DispatchQueue.main.async {
-                        // Do something with the decoded response
                     }
                     return
                 }

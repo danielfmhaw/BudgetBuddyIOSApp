@@ -1,14 +1,11 @@
 //
-//  MainScreen.swift
-//  Login2
-//
+// Hauptscreen nach dem erfolgreichem Login
+// (Hauptmenü mit den 4 Icons unten)
 //  Created by Daniel Mendes on 29.04.23.
 //
 
 import SwiftUI
 
-
-//LoggedInView (Hauptmenü mit den 4 Icons unten)
 struct LoggedInView: View {
     var email: String
     var logoutAction: () -> Void
@@ -359,7 +356,7 @@ struct LoggedInView: View {
             
     
             
-            //NavigationView für die "Einstellungen" (aktuell wird nur zu BenutzerView verlinkt und es gibt einen deafault: "allgemein")
+            //NavigationView für die "Einstellungen" (aktuell wird nur zu BenutzerView verlinkt und es gibt einen deafault: "allgemein" und den Chat)
             NavigationView {
                 VStack(alignment: .leading) {
                     NavigationLink(destination: BenutzerView(benutzer: user)) {

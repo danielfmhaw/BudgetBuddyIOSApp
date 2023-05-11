@@ -1,6 +1,4 @@
-//
-//  AddNewActivity.swift
-//  Login2
+// Screen, um eine neue Aktivtät hinzuzufügen
 //
 //  Created by Daniel Mendes on 29.04.23.
 //
@@ -8,7 +6,6 @@
 import SwiftUI
 
 
-//Screen, um eine neue Aktivtät hinzuzufügen
 struct AddNewActivityView: View {
     let user: Benutzer?
     let actart:String?
@@ -25,6 +22,7 @@ struct AddNewActivityView: View {
     var body: some View {
         NavigationView {
             Form {
+                //Felder für die jeweiligen Attribute
                 Section(header: Text("Betrag")) {
                     TextField("0.00", text: $betrag)
                         .keyboardType(.decimalPad)

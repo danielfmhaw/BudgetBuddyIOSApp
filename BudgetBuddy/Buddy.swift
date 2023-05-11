@@ -1,9 +1,6 @@
+// Screen, indem mit dem Buddy interagiert werden kann
 //
-//  Buddy.swift
-//  BudgetBuddy
-//
-//  Created by Daniel Mendes on 09.05.23.
-//
+// Created by Daniel Mendes on 09.05.23.
 
 import SwiftUI
 import Charts
@@ -67,6 +64,7 @@ struct Buddy: View {
                                .id(messageComp)
                            }
                        }
+                       // Scrollt immer zu der letzten Nachricht
                        .onChange(of: messagesComp) { _ in
                            withAnimation {
                                scrollView.scrollTo(messagesComp.last, anchor: .bottom)
@@ -74,7 +72,6 @@ struct Buddy: View {
                        }
                    }
                }
-
 
                HStack {
                    TextField("Schreibe eine Nachricht", text: $chatText)
@@ -95,13 +92,16 @@ struct Buddy: View {
            fetchActivities()
        }
     }
-       
+     
+    // Messages werden im Chat angezeigt (je nach Benutzereingabe unterschiedliche Antworten)
     func sendMessage(_ message: String) {
         messagesBenutzer.append(message)
         if message.lowercased() == "hallo" || message.lowercased() == "hi" {
             messagesComp.append("Was kann ich für dich tun?")
         }else if message.lowercased() == "danke" || message.lowercased() == "thx" {
             messagesComp.append("Kein Problem ;)")
+        }else if message.lowercased() == "befehle"{
+            messagesComp.append("Es gibt folgende Befehle: \r\n1. Limitüberschreitungen mit 'Limit' anzeigen lassen \r\n2. Große Einnahmenquellen anzeigen lassen mit 'Einnahmen' und \r\n3. Alles große Ausgabeposten anzeigen lassen")
         }else if message.lowercased().contains("einna"){
             let einnahmenMessages = getBudgetInformation(art: "Einnahmen")
             var alles: String = ""
@@ -133,10 +133,12 @@ struct Buddy: View {
             }
             messagesComp.append(alles)
         } else {
-            messagesComp.append("Entschuldigung, ich verstehe nicht, was du meinst.")
+            messagesComp.append("Entschuldigung, ich kann nichts mit der Nachricht: \(message) anfangen.\r\nNutze 'Befehle' für nähere Infos.")
+
         }
     }
     
+    // Gibt Informationen zu den Budgets
     func getBudgetInformation(art:String) -> [String] {
         var messages: [String] = []
         let budgetmessage = berechneNachKategorieUndArt(art: art)
@@ -155,6 +157,7 @@ struct Buddy: View {
         return messages
     }
     
+    // Gibt Informationen zu den Limits
     func getLimitInformation() -> [String] {
         var messages: [String] = []
         for limit in limits {
@@ -167,6 +170,7 @@ struct Buddy: View {
         return messages
     }
     
+    // Gibt prozentualen Anteil von einer Kategorie mit einer Art von dem gesamten Beträgen derjweiligen Art an
     func berechneNachKategorieUndArt(art:String) -> [(kategorie: String, anteil: Double)] {
         var nachKategorie: [(kategorie: String, summe: Double)] = []
         var gesamtsumme: Double = 0
@@ -185,9 +189,9 @@ struct Buddy: View {
         return prozentual
     }
     
-    
+    // Erstellt Limit-Analysen basierend auf den Limits und Aktivitäten
     private func createLimitAnalysen() {
-        let kategorien = Set(limits.map { $0.kategorie }) // Alle einzigartigen Kategorien
+        let kategorien = Set(limits.map { $0.kategorie })
         
         var limitAnalysen = [LimitAnalyse]()
         for kategorie in kategorien {
@@ -199,6 +203,7 @@ struct Buddy: View {
         print(limitAnalysen)
     }
     
+    // Summiert die Summe in der jeweiligen Kategorie und Art auf
     private func getAktivitaetenSummeInKategorie(kategorie: String,art:String) -> Double {
         let aktivitaetenAusgaben = activities.filter { $0.art == art }
         let aktivitaetenInKategorie = aktivitaetenAusgaben.filter { $0.kategorie == kategorie }
@@ -207,7 +212,7 @@ struct Buddy: View {
     }
 
 
-    
+    // Limits werden aus dem Backend für den jeweiligen Benutzer geladen
     private func fetchLimits() {
         guard let url = URL(string: "http://localhost:8080/api/v1/limit/\(email)") else {
             print("Invalid URL")
@@ -228,7 +233,7 @@ struct Buddy: View {
         }.resume()
     }
     
-    
+    // Alle Aktivitäten werden aus dem Backend für den jeweiligen Nutzer geladen
     private func fetchActivities() {
         guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/\(email)") else {
             print("Invalid URL")

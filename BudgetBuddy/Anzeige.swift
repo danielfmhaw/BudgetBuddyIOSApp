@@ -1,7 +1,10 @@
+// Screen, um die Einnahmen bzw. Ausgaben sortiert entweder in Euro oder in % anzeigen zu lassen
+//
+//  Created by Daniel Mendes on 29.04.23.
 import SwiftUI
 
 
-//Screen, um die Einnahmen bzw. Ausgaben sortiert entweder in Euro oder in % anzeigen zu lassen
+// Bekommt kategorien, email, art aus der KreisdiagrammView
 struct EinnahmenView: View {
     var kategorien: [Kategorie] 
     let email: String
@@ -29,6 +32,7 @@ struct EinnahmenView: View {
             
             if kategorien.isEmpty {
                 Text("Lade Daten...")
+            // Anzeige als Liste in Euro
             } else {
                 if selectedDisplayMode == 0 {
                     VStack {
@@ -40,6 +44,7 @@ struct EinnahmenView: View {
                            }
                        }
                     }
+                // Anzeige als Liste in % aber ohne Gesamt
                 } else if selectedDisplayMode==1 {
                     let totalEinnahmen = kategorieOhneGesamt.map { $0.einnahmen }.reduce(0, +)
                     List(kategorieOhneGesamt.filter { $0.einnahmen != 0 }.sorted { $0.einnahmen > $1.einnahmen }, id: \.id) { kategorie in
@@ -56,6 +61,7 @@ struct EinnahmenView: View {
         }
     }
     
+    // Je nachdem welcher Prozentsatz eine Kategorie hat, wird eine unterschiedliche Farbe angezeigt
     private func getColorForPercentage(_ prozent: Double) -> Color {
         if prozent >= 70 {
             return Color.red
@@ -67,6 +73,4 @@ struct EinnahmenView: View {
             return Color.black
         }
     }
-    
 }
-

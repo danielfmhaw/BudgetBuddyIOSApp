@@ -1,6 +1,6 @@
 import SwiftUI
 
-//Struktur von der Aktivität
+//Struktur einer Aktivität
 struct Aktivitaet: Codable, Identifiable {
     var id: Int
     var betrag: Double
@@ -11,7 +11,7 @@ struct Aktivitaet: Codable, Identifiable {
     var datum: String
 }
 
-//Struktur von dem Benutzer
+//Struktur eines Benutzers
 struct Benutzer: Codable {
     var email: String
     var password: String
@@ -22,7 +22,7 @@ struct Benutzer: Codable {
     var lieblingsGegenstand: String
 }
 
-//Struktur von der Kategorie (also mit Summe aller Aktivtäten der Kategorie als "einnahmen")
+//Struktur einer Kategorie (also mit Summe aller Aktivtäten der Kategorie als "einnahmen")
 struct Kategorie: Identifiable,Decodable {
     var id: String
     var einnahmen: Double
@@ -85,6 +85,8 @@ struct ContentView: View {
                     .fullScreenCover(isPresented: $showLoggedInView, content: {
                         LoggedInView(email: email, logoutAction: logout)
                     })
+                
+                //Wird nur angezeigt, wenn Login nicht erfolgreich war
                 }else{
                     Button(action: {
                         if authenticate() {
@@ -108,6 +110,7 @@ struct ContentView: View {
                 }
                 Divider()
                 
+                // Verlinkung zum Registrieren
                 if loginFailed {
                     NavigationLink(destination: RegistrationView()){
                         Text("Registrieren")
@@ -124,6 +127,7 @@ struct ContentView: View {
                 loginFailed = false
                 
             }
+            // Wenn man die Seite verlässt
             .onDisappear {
                 emailInput = ""
                 password = ""
@@ -154,10 +158,9 @@ struct ContentView: View {
             }
             
             if response.statusCode == 200 {
-                // Authentication successful
+                // Authentifikation erfolgreich
                 success = true
             } else {
-                // Authentication failed
                 print("Authentication failed with status code \(response.statusCode)")
             }
         }.resume()
@@ -167,6 +170,7 @@ struct ContentView: View {
         return success
     }
     
+    //Wenn man sich ausloggt, werden Daten zurückgesetzt
     func logout() {
         self.showLoggedInView = false
         self.emailInput=""
@@ -175,7 +179,7 @@ struct ContentView: View {
     }
 }
 
-//Dient zur Simulation
+//Dient zum Preview
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()

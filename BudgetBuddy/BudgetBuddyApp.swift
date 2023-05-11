@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-
+// Geöffnete View bei RUN()
 @main
 struct BudgetBuddyApp: App {
     var body: some Scene {

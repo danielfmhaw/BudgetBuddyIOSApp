@@ -13,7 +13,6 @@ struct Kreisdiagramm: View {
     @State private var kategorien: [Kategorie] = []
     let art: String
     let email:String
-    
     let dispatchGroup = DispatchGroup()
     
     private var kategorienListe: [String] {
@@ -23,18 +22,19 @@ struct Kreisdiagramm: View {
            createPieChart().1
     }
     
+    // Farben der "Stücke"
     let farbenListe: [Color] = [.red, .green, .blue, .orange, .yellow, .pink, .purple, Color.pink.opacity(0.8) , .teal, .indigo, .mint, .cyan]
-
 
     @State private var showEinnahmenView = false
     
+    //Ausgewähltes "Stück" (durch Klicken)
     @State private var selectedSlice: PieSlice?
-
     
     var kategorieOhneGesamt: [Kategorie] {
         return kategorien.filter { $0.id != "Gesamt" }
     }
     
+    // Alle "Stücke"
     var slices: [PieSlice] {
         var slices = [PieSlice]()
         var startDegree: Double = 0
@@ -66,11 +66,13 @@ struct Kreisdiagramm: View {
                         .fontWeight(.bold)
                         .padding(.bottom, 30)
                     
+                    // Insgesamten Beträge dieser Art werden aufsummiert
                     Text("Gesamt: \(String(format: "%.2f", abs(calculateTotalEinnahmen()))) €")
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(art == "Einnahmen" ? .green : .red)
                     
+                    // Mit diesem Button kann man die Infos als Liste anzeigen lassen
                     Button(action: {
                         showEinnahmenView = true
                     }) {
@@ -89,9 +91,10 @@ struct Kreisdiagramm: View {
                 }
                 
                 ZStack {
+                    // "Stücke" im Kreisdiagramm werden angezeigt
                     ForEach(slices) { slice in
                         Path { path in
-                            let width = UIScreen.main.bounds.width - 20 // Abstand von 10 zu jeder Seite
+                            let width = UIScreen.main.bounds.width - 20
                             let height = UIScreen.main.bounds.height
                             let center = CGPoint(x: width / 2 + 10, y: height / 6)
                             path.move(to: center)
@@ -103,6 +106,7 @@ struct Kreisdiagramm: View {
                         }
                     }
                     
+                    // Zeigt Informationen für das aktuelle ausgwählte "Stück" an
                     if let slice = selectedSlice {
                         let sliceDegree = slice.endAngle - slice.startAngle
                         let sliceMidDegree = slice.startAngle + (sliceDegree / 2)
@@ -132,6 +136,7 @@ struct Kreisdiagramm: View {
         }
     }
     
+    // Berechnet die Einnahmen von allen Kategorien der ausgwählten Art
     private func calculateTotalEinnahmen() -> Double {
         var totalEinnahmen: Double = 0.0
         
@@ -142,6 +147,7 @@ struct Kreisdiagramm: View {
         return totalEinnahmen
     }
     
+    // Geht alle Aktivtitäten durch und wenn die Einnahmen,bzw. Ausgaben > 0 sind i.d. jeweiligen Kategorie wird diese später im Diagramm angezeigt
     private func createPieChart() -> ([String], [Double]) {
         var kategorienListe = [String]()
         var einnahmenListe = [Double]()
@@ -152,10 +158,6 @@ struct Kreisdiagramm: View {
                 einnahmenListe.append(kategorie.einnahmen)
             }
         }
-        
-        print("Kategorien: \(kategorienListe)")
-        print("Einnahmen: \(einnahmenListe)")
-        
         return (kategorienListe, einnahmenListe)
     }
     
@@ -169,11 +171,11 @@ struct Kreisdiagramm: View {
                 return
             }
             
-            dispatchGroup.enter() // Neu hinzugefügt
+            dispatchGroup.enter()
             URLSession.shared.dataTask(with: url) { (data, response, error) in
                 guard let data = data, error == nil else {
                     print("Error fetching data: \(error?.localizedDescription ?? "Unknown error")")
-                    dispatchGroup.leave() // Neu hinzugefügt
+                    dispatchGroup.leave()
                     return
                 }
                 
@@ -186,11 +188,11 @@ struct Kreisdiagramm: View {
                 } else {
                     print("Invalid response from server")
                 }
-                dispatchGroup.leave() // Neu hinzugefügt
+                dispatchGroup.leave()
             }.resume()
         }
         
-        dispatchGroup.notify(queue: .main) { // Neu hinzugefügt
+        dispatchGroup.notify(queue: .main) {
             self.kategorien.append(Kategorie(id: "Gesamt", einnahmen: gesamtEinnahmen))
         }
     }

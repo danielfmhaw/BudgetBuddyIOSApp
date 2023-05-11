@@ -1,6 +1,12 @@
+// Screen, indem die Limits visualisiert werden und verglichen werden mit der Differenz
+// von Limit und der Summe aller Beträge von allen Aktivitäten derjeweiligen Kategorie
+//
+// Created by Daniel Mendes on 30.04.23.
+
 import SwiftUI
 import Charts
 
+// Struktur des Limitanalyse, mit ID (für Diagramm)
 struct LimitAnalyse: Identifiable {
     let id = UUID()
     let kategorie: String
@@ -11,13 +17,14 @@ struct LimitAnalyse: Identifiable {
     }
 }
 
+
 struct LimitAnalyseView: View {
     let email: String
        @State var limits: [Limit] = []
        @State var activities: [Aktivitaet] = []
        @State var limitAnalysen: [LimitAnalyse] = []
        @State var showList: Bool = true
-        @State private  var currentActiveItem: Item?
+       @State private  var currentActiveItem: Item?
 
        var body: some View {
            NavigationView {
@@ -34,7 +41,7 @@ struct LimitAnalyseView: View {
                    .pickerStyle(SegmentedPickerStyle())
                    .padding()
                    
-                   
+                   // Anzeige als Liste
                    if !showList {
                        List(limits) { limit in
                            if let limitAnalyse = limitAnalysen.first(where: { $0.kategorie == limit.kategorie }) {
@@ -48,6 +55,7 @@ struct LimitAnalyseView: View {
                                }
                            }
                        }
+                    // Anzeige als Balkendiagramm (BarMark)
                    } else {
                        ScrollView {
                            Chart(items) { item in
@@ -56,11 +64,11 @@ struct LimitAnalyseView: View {
                                    y: .value("Profit", item.value)
                                )
                                .foregroundStyle(
-                                    item.value >= 0 ? Color.green.gradient : Color.red.gradient // Bedingung umkehren
+                                    item.value >= 0 ? Color.green.gradient : Color.red.gradient
                                )
+                               // Zeigt Daten des geraden ausgwählten Balken an
                                if let currentActiveItem,currentActiveItem.type == item.type {
                                    RuleMark(x: .value("Type", currentActiveItem.type))
-                                       //LineStyle
                                        .lineStyle(.init(lineWidth: 3, miterLimit: 3, dash:[7],dashPhase:5))
                                        .annotation(position: .bottom){
                                            VStack(){
@@ -85,6 +93,7 @@ struct LimitAnalyseView: View {
                            .frame(height: 400)
                            
                        }
+                       // Speichert die Daten des gerade ausgwählten Diagramms
                        .chartOverlay(content: {proxy in
                            GeometryReader{ innerproxy in
                                Rectangle()
@@ -92,7 +101,6 @@ struct LimitAnalyseView: View {
                                    .gesture(
                                        DragGesture()
                                            .onChanged{ value in
-                                               //Getting current location
                                                let location = value.location
                                                
                                                if let type:String = proxy.value(atX:location.x){
@@ -117,32 +125,9 @@ struct LimitAnalyseView: View {
                }
            }
        }
-       
-       private var items: [Item] {
-           var items = [Item]()
-           for limit in limits {
-               if let limitAnalyse = limitAnalysen.first(where: { $0.kategorie == limit.kategorie }) {
-                   items.append(Item(type: limit.kategorie, value: limitAnalyse.ueberschuss))
-               }
-           }
-           return items
-       }
-       
-       private struct Item: Identifiable {
-           let id = UUID()
-           let type: String
-           let value: Double
-       }
-    
-    private func getAktivitaetenSummeInKategorie(kategorie: String) -> Double {
-        let aktivitaetenInKategorie = activities.filter { $0.kategorie == kategorie }
-        let betragSumme = aktivitaetenInKategorie.reduce(0) { $0 + $1.betrag }
-        return betragSumme
-    }
-
-    
+    // Erstellt Limit-Analysen basierend auf den Limits und Aktivitäten
     private func createLimitAnalysen() {
-        let kategorien = Set(limits.map { $0.kategorie }) // Alle einzigartigen Kategorien
+        let kategorien = Set(limits.map { $0.kategorie })
         
         var limitAnalysen = [LimitAnalyse]()
         for kategorie in kategorien {
@@ -153,9 +138,33 @@ struct LimitAnalyseView: View {
         self.limitAnalysen = limitAnalysen
         print(limitAnalysen)
     }
-
-
     
+    // Erstellt eine Liste von Items basierend auf den Limits und Limit-Analysen
+    private var items: [Item] {
+       var items = [Item]()
+       for limit in limits {
+           if let limitAnalyse = limitAnalysen.first(where: { $0.kategorie == limit.kategorie }) {
+               items.append(Item(type: limit.kategorie, value: limitAnalyse.ueberschuss))
+           }
+       }
+       return items
+    }
+    
+    // Ein einzelnes Item-Objekt, das den Typ und den Wert repräsentiert
+    private struct Item: Identifiable {
+       let id = UUID()
+       let type: String
+       let value: Double
+    }
+    
+    // Summiert die Summe in der jeweiligen Kategorie auf
+    private func getAktivitaetenSummeInKategorie(kategorie: String) -> Double {
+        let aktivitaetenInKategorie = activities.filter { $0.kategorie == kategorie }
+        let betragSumme = aktivitaetenInKategorie.reduce(0) { $0 + $1.betrag }
+        return betragSumme
+    }
+
+    // Bekommt alle Limits aus dem Backend für den jeweiligen Benutzer (-email)
     private func fetchLimits() {
         guard let url = URL(string: "http://localhost:8080/api/v1/limit/\(email)") else {
             print("Invalid URL")
@@ -176,7 +185,7 @@ struct LimitAnalyseView: View {
         }.resume()
     }
     
-    
+    // Bekommt alle Aktivtitäten aus dem Backend mit Art "Ausgaben"
     private func fetchActivities() {
         guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/withArt/\(email)/Ausgaben") else {
             print("Invalid URL")

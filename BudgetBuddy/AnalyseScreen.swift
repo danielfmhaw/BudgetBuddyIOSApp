@@ -1,9 +1,6 @@
+// Screen, um die Benutzerdaten anzuzeigen
 //
-//  AnalyseScreen.swift
-//  Login2
-//
-//  Created by Daniel Mendes on 29.04.23.
-//
+// Created by Daniel Mendes on 29.04.23.
 
 import SwiftUI
 import Charts
@@ -14,7 +11,7 @@ struct Activity: Identifiable, Codable {
     let amount: Double
 }
 
-//Screen, um die Einnahmen bzw. Ausgaben sortiert entweder in Euro oder in % anzeigen zu lassen
+// Hier werden die verschiedenen Graphen (BarChart oder LineChart) für unterschiedliche Zeiträume angezeigt
 struct AnaylseView: View {
     let email: String
     
@@ -55,6 +52,7 @@ struct AnaylseView: View {
                 
                 
                 VStack {
+                    // Ab hier werden die Einnahmen angezeigt
                     Text("Einnahmen")
                         .font(.system(size: 18, weight: .bold))
                     
@@ -72,9 +70,9 @@ struct AnaylseView: View {
                             )
                             .foregroundStyle(Color.green.gradient)
                         }
+                        // Hier werden die ausgwählten Werte angezeigt (für d. Einnahmen)
                         if let currentActiveItemRevenue,currentActiveItemRevenue.date == activity.date {
                             RuleMark(x: .value("Date", currentActiveItemRevenue.date))
-                                //LineStyle
                                 .lineStyle(.init(lineWidth: 3, miterLimit: 3, dash:[7],dashPhase:5))
                                 .annotation(position: .top){
                                     VStack(){
@@ -94,6 +92,7 @@ struct AnaylseView: View {
                                 }
                         }
                     }
+                    // Dient dazu das einzelne Werte ausgewählt werden können (für d. Einnahmen)
                     .chartOverlay(content: {proxy in
                         GeometryReader{ innerproxy in
                             Rectangle()
@@ -101,9 +100,7 @@ struct AnaylseView: View {
                                 .gesture(
                                     DragGesture()
                                         .onChanged{ value in
-                                            //Getting current location
                                             let location = value.location
-                                            
                                             if let type:String = proxy.value(atX:location.x){
                                                 if let currentitem = einnahmen.first(where: {item in
                                                     type == item.date
@@ -122,6 +119,7 @@ struct AnaylseView: View {
                     .frame(height: 150)
                     .padding()
                     
+                    // Ab hier werden die Ausgaben angezeigt
                     Text("Ausgaben")
                         .font(.system(size: 18, weight: .bold))
                     
@@ -139,9 +137,9 @@ struct AnaylseView: View {
                             )
                             .foregroundStyle(Color.red.gradient)
                         }
+                        // Hier werden die ausgwählten Werte angezeigt (für d. Ausgaben)
                         if let currentActiveItemCost,currentActiveItemCost.date == activity.date {
                             RuleMark(x: .value("Date", currentActiveItemCost.date))
-                                //LineStyle
                                 .lineStyle(.init(lineWidth: 3, miterLimit: 3, dash:[7],dashPhase:5))
                                 .annotation(position: .top){
                                     VStack(){
@@ -161,6 +159,7 @@ struct AnaylseView: View {
                                 }
                         }
                     }
+                    // Dient dazu das einzelne Werte ausgewählt werden können (für d. Ausgaben)
                     .chartOverlay(content: {proxy in
                         GeometryReader{ innerproxy in
                             Rectangle()
@@ -168,9 +167,7 @@ struct AnaylseView: View {
                                 .gesture(
                                     DragGesture()
                                         .onChanged{ value in
-                                            //Getting current location
                                             let location = value.location
-                                            
                                             if let type:String = proxy.value(atX:location.x){
                                                 if let currentitem = ausgaben.first(where: {item in
                                                     type == item.date
@@ -199,7 +196,7 @@ struct AnaylseView: View {
         }
     }
     
-    
+    // Hier werden im Abhängigkeit von dem ausgwählten Zeitraum die Diagramme unterschiedlich "beladen"
     func getChartData() -> ([Activity], [Activity]) {
         var einnahmen = [Activity]()
         var ausgaben = [Activity]()
@@ -218,6 +215,7 @@ struct AnaylseView: View {
         return (einnahmen, ausgaben)
     }
     
+    // Liefert eine Liste von der letzetn 10 Aktivitätsjahren zurück, basierend auf der Art der Aktivität und einer Liste von Aktivitäten
     func getActivityYears(art:String,aktivitaeten: [Aktivitaet]) -> [Activity] {
         var activityYears: [Activity] = []
         let yearGroups = Dictionary(grouping: aktivitaeten, by: { getYear(from: $0.datum) })
@@ -237,26 +235,12 @@ struct AnaylseView: View {
         return activityYears
     }
 
-
-    func getYear(from date: String) -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
-        let date = dateFormatter.date(from: date)!
-        let calendar = Calendar.current
-        let year = calendar.component(.year, from: date)
-        return String(year)
-    }
-    
+    // Liefert eine Liste von der letzten 12 Aktivitätsmonaten zurück, basierend auf der Art der Aktivität und einer Liste von Aktivitäten
     func getActivityMonths(art: String, aktivitaeten: [Aktivitaet]) -> [Activity] {
         var activityMonths: [Activity] = []
-        
-        // Create a dictionary with month strings as keys and arrays of activities as values
         let monthGroups = Dictionary(grouping: aktivitaeten, by: { getMonth(from: $0.datum) })
-        
-        // Get the last 12 months as an array of month strings
         let lastTwelveMonths = getLastTwelveMonths()
         
-        // Iterate over the last 12 months and calculate the sum of activities in each month
         for month in lastTwelveMonths {
             let monthString = month.prefix(3) + String(month.suffix(2))
             let sum = monthGroups[month]?.reduce(0) { (result, activity) in
@@ -272,38 +256,8 @@ struct AnaylseView: View {
         
         return activityMonths
     }
-
-    // Returns the month string in the format "MMMyy" (e.g. "Apr23") for the given date string
-    func getMonth(from date: String) -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
-        let date = dateFormatter.date(from: date)!
-        dateFormatter.dateFormat = "MMMyy"
-        return dateFormatter.string(from: date)
-    }
-
-    // Returns an array of month strings for the last 12 months
-    func getLastTwelveMonths() -> [String] {
-        var months: [String] = []
-        let calendar = Calendar.current
-        let currentDate = Date()
-        var dateComponents = DateComponents()
-        for i in 0..<12 {
-            dateComponents.month = -i
-            let monthDate = calendar.date(byAdding: dateComponents, to: currentDate)!
-            let monthString = getMonthDescription(from: monthDate)
-            months.append(monthString)
-        }
-        return months.reversed()
-    }
-
-    // Returns the month string in the format "MMMyy" (e.g. "Apr23") for the given date
-    func getMonthDescription(from date: Date) -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMMyy"
-        return dateFormatter.string(from: date)
-    }
     
+    // Liefert eine Liste von 14 Aktivitätstagen zurück, basierend auf der Art der Aktivität und einer Liste von Aktivitäten
     func getActivityLast14Days(art: String, aktivitaeten: [Aktivitaet]) -> [Activity] {
         var activityDays: [Activity] = []
         let dayGroups = Dictionary(grouping: aktivitaeten, by: { getDay(from: $0.datum) })
@@ -336,7 +290,48 @@ struct AnaylseView: View {
     }
 
 
-    // Returns the day string in the format "dd.MM" (e.g. "29.04") for the given date string
+    // Gibt ein Array von Monatsstrings für die letzten 12 Monate zurück.
+    func getLastTwelveMonths() -> [String] {
+        var months: [String] = []
+        let calendar = Calendar.current
+        let currentDate = Date()
+        var dateComponents = DateComponents()
+        for i in 0..<12 {
+            dateComponents.month = -i
+            let monthDate = calendar.date(byAdding: dateComponents, to: currentDate)!
+            let monthString = getMonthDescription(from: monthDate)
+            months.append(monthString)
+        }
+        return months.reversed()
+    }
+    
+    // Gibt das Jahr im Format "yyyy" (z.B. "2023") für den angegebenen Datumsstring zurück.
+    func getYear(from date: String) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
+        let date = dateFormatter.date(from: date)!
+        let calendar = Calendar.current
+        let year = calendar.component(.year, from: date)
+        return String(year)
+    }
+
+    // Gibt den Monatsstring im Format "MMMyy" (z.B. "Apr23") für den angegebenen Datumsstring zurück.
+    func getMonth(from date: String) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
+        let date = dateFormatter.date(from: date)!
+        dateFormatter.dateFormat = "MMMyy"
+        return dateFormatter.string(from: date)
+    }
+    
+    // Gibt den Monatsstring im Format "MMMyy" (z.B. "Apr23") für das angegebene Datum zurück.
+    func getMonthDescription(from date: Date) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "MMMyy"
+        return dateFormatter.string(from: date)
+    }
+    
+    // Gibt das Tagesdatum im Format "dd.MM" (z.B. "29.04") für den angegebenen Datumsstring zurück.
     func getDay(from date: String) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
@@ -345,7 +340,7 @@ struct AnaylseView: View {
         return dateFormatter.string(from: date)
     }
 
-    // Returns the day string in the format "dd.MM" (e.g. "29.04") for the given date
+    // Gibt das Tagesdatum im Format "dd.MM" (z.B. "29.04") für das angegebene Datum zurück
     func getDayDescription(from date: Date) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "dd.MM"

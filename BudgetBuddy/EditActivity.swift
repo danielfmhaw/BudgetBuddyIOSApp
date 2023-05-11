@@ -1,9 +1,6 @@
+// Screen, um eine Aktivtät zu editieren/verändern
 //
-//  EditActivity.swift
-//  Login2
-//
-//  Created by Daniel Mendes on 29.04.23.
-//
+//  Created by Daniel Mendes on 29.04.23
 
 import SwiftUI
 
@@ -32,6 +29,7 @@ struct EditActivityView: View {
         }
     }
     
+    // Entsprechende bisher gepeicherte Attribute angezeigt und verändertbar und mit Button abspeichbar
     var body: some View {
         NavigationView {
             Form {
@@ -60,11 +58,11 @@ struct EditActivityView: View {
                             .padding(.leading, 16)
                 }
                 
-                Section(header: Text("Datum")) { // neue Sektion für das Datum
+                Section(header: Text("Datum")) {
                     DatePicker("Datum", selection: $datum, displayedComponents: [.date])
                         .onAppear {
                             let dateFormatter = DateFormatter()
-                            dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ" // Das Format des Strings
+                            dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
                             if let date = dateFormatter.date(from: activity.datum) {
                                 datum = date
                             }
@@ -83,7 +81,7 @@ struct EditActivityView: View {
                             kategorie: selectedKategorie,
                             art: activity.art,
                             benutzer: activity.benutzer,
-                            datum: dateString // Datum hinzufügen
+                            datum: dateString
                         )
                         saveActivity(updatedAktivitaet)
                         presentationMode.wrappedValue.dismiss()

@@ -1,17 +1,15 @@
+// Screen, um die Benutzerdaten anzuzeigen
 //
-//  Settings_Screen.swift
-//  Login2
-//
-//  Created by Daniel Mendes on 29.04.23.
-//
+// Created by Daniel Mendes on 29.04.23.
 
 import SwiftUI
 
 
-//Screen, um die Benutzerdaten anzuzeigen, kommt noch aus dem LoggedInView
+// Benutzer wird aus dem LoggenInView übergeben
 struct BenutzerView: View {
     let benutzer: Benutzer?
     
+    // Nur Anzeigen der verschiedenen Attribute
     var body: some View {
         if let benutzer = benutzer {
             VStack(alignment: .leading) {
