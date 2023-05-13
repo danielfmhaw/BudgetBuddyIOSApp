@@ -181,10 +181,10 @@ struct LoggedInView: View {
                     .padding(.horizontal)
                     
                     List {
-                        ForEach(aktivitaeten
-                                    .filter { sucheEinnahmen.isEmpty ? true : $0.beschreibung.localizedCaseInsensitiveContains(sucheEinnahmen) }
-                                    .sorted(by: soriertenEinnahmen == .ascending ? { $0.datum < $1.datum } : { $0.datum > $1.datum }),
-                                id: \.id) { aktivitaet in
+                        ForEach(Array(aktivitaeten
+                            .filter { sucheEinnahmen.isEmpty ? true : $0.beschreibung.localizedCaseInsensitiveContains(sucheEinnahmen) }
+                            .sorted(by: soriertenEinnahmen == .ascending ? { $0.datum < $1.datum } : { $0.datum > $1.datum })
+                                        .enumerated()), id: \.element.id) { index, aktivitaet in
                             NavigationLink(destination: EditActivityView(activity: aktivitaet)){
                                 HStack {
                                     VStack(alignment: .leading, spacing: 10) {
@@ -224,8 +224,12 @@ struct LoggedInView: View {
                             }
                         }
                         .onDelete { indexSet in
-                            for index in indexSet {
-                                deleteAktivitaet(id: aktivitaeten[index].id,art: "Einnahmen")
+                            let indexesToDelete = indexSet.map { $0 }
+                            for index in indexesToDelete {
+                                let aktivitaet = aktivitaeten
+                                    .filter { sucheEinnahmen.isEmpty ? true : $0.beschreibung.localizedCaseInsensitiveContains(sucheEinnahmen) }
+                                    .sorted(by: soriertenEinnahmen == .ascending ? { $0.datum < $1.datum } : { $0.datum > $1.datum })[index]
+                                deleteAktivitaet(id: aktivitaet.id, art: "Einnahmen")
                             }
                         }
                     }
@@ -286,10 +290,10 @@ struct LoggedInView: View {
                     .padding(.horizontal)
                     
                     List {
-                        ForEach(aktivitaeten
-                                    .filter { sucheAusgaben.isEmpty ? true : $0.beschreibung.localizedCaseInsensitiveContains(sucheAusgaben) }
-                                    .sorted(by: soriertenAusgaben == .ascending ? { $0.datum < $1.datum } : { $0.datum > $1.datum }),
-                                id: \.id) { aktivitaet in
+                        ForEach(Array(aktivitaeten
+                                        .filter { sucheAusgaben.isEmpty ? true : $0.beschreibung.localizedCaseInsensitiveContains(sucheAusgaben) }
+                                        .sorted(by: soriertenAusgaben == .ascending ? { $0.datum < $1.datum } : { $0.datum > $1.datum })
+                                        .enumerated()), id: \.element.id) { index, aktivitaet in
                             NavigationLink(destination: EditActivityView(activity: aktivitaet)){
                                 HStack {
                                     VStack(alignment: .leading, spacing: 10) {
@@ -320,7 +324,7 @@ struct LoggedInView: View {
                                 .padding(.vertical, 10)
                                 .contextMenu {
                                     Button(action: {
-                                        deleteAktivitaet(id: aktivitaet.id,art: "Ausgaben")
+                                        deleteAktivitaet(id: aktivitaet.id, art: "Ausgaben")
                                     }) {
                                         Text("Löschen")
                                         Image(systemName: "trash")
@@ -329,8 +333,12 @@ struct LoggedInView: View {
                             }
                         }
                         .onDelete { indexSet in
-                            for index in indexSet {
-                                deleteAktivitaet(id: aktivitaeten[index].id,art: "Ausgaben")
+                            let indexesToDelete = indexSet.map { $0 }
+                            for index in indexesToDelete {
+                                let aktivitaet = aktivitaeten
+                                    .filter { sucheAusgaben.isEmpty ? true : $0.beschreibung.localizedCaseInsensitiveContains(sucheAusgaben) }
+                                    .sorted(by: soriertenAusgaben == .ascending ? { $0.datum < $1.datum } : { $0.datum > $1.datum })[index]
+                                deleteAktivitaet(id: aktivitaet.id, art: "Ausgaben")
                             }
                         }
                     }
