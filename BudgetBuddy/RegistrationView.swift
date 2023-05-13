@@ -97,7 +97,7 @@ struct RegistrationView: View {
                         .cornerRadius(5.0)
                 }
                 .fullScreenCover(isPresented: $showLoggedInView, content: {
-                    LoggedInView(email: email, logoutAction: logout)
+                    ContentView(emailInput: email, password: password)
                 })
             }
             .navigationBarTitle(Text("Registrieren"), displayMode: .inline)
@@ -136,9 +136,7 @@ struct RegistrationView: View {
     func sendToBackend() {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-        
-        let benutzer = Benutzer(email: email, password: password,name: name, geburtstag: dateFormatter.string(from: geburtstag), kontostand: kontostand, buddyName: buddyName, lieblingsGegenstand: lieblingsGegenstand)
-        print (benutzer)
+        let benutzer = Benutzer(email: email, password: password, name: name, geburtstag: dateFormatter.string(from: geburtstag), kontostand: kontostand, buddyName: buddyName, lieblingsGegenstand: lieblingsGegenstand)
         let jsonEncoder = JSONEncoder()
         do {
             let jsonData = try jsonEncoder.encode(benutzer)
@@ -171,7 +169,6 @@ struct RegistrationView: View {
                     DispatchQueue.main.async {
                         self.showLoggedInView = true
                     }
-                    
                     print("Data sent successfully")
                 } else {
                     print("Error: unexpected status code \(httpResponse.statusCode)")

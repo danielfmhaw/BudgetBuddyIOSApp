@@ -34,11 +34,13 @@ struct EinnahmenResponse: Decodable {
 
 //Login-In Seite
 struct ContentView: View {
-    @State private var emailInput: String = ""
+    @State var emailInput: String?
+    @State var password: String?
+       
     private var email: String {
-          emailInput.lowercased()
-      }
-    @State private var password = ""
+            emailInput?.lowercased() ?? ""
+    }
+    
     @State private var showLoggedInView = false
     @State private var loginFailed = false
 
@@ -52,14 +54,14 @@ struct ContentView: View {
                           .resizable()
                           .aspectRatio(contentMode: .fit)
                 
-                TextField("E-mail", text: $emailInput)
+                TextField("E-mail", text: Binding($emailInput) ?? .constant(""))
                            .padding()
                            .background(Color(.systemGray6))
                            .cornerRadius(5.0)
                            .padding(.bottom, 20)
                            .autocapitalization(.none)
 
-                SecureField("Passwort", text: $password)
+                SecureField("Passwort", text: Binding($password) ?? .constant(""))
                     .padding()
                     .background(Color(.systemGray6))
                     .cornerRadius(5.0)
