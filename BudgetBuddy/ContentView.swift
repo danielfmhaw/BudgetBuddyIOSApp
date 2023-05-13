@@ -43,16 +43,23 @@ struct ContentView: View {
     
     @State private var showLoggedInView = false
     @State private var loginFailed = false
+    @Environment(\.colorScheme) var colorScheme
 
 
     var body: some View {
         NavigationView {
             VStack {
                 Spacer()
-
-                Image("budgetbuddybatch")
-                          .resizable()
-                          .aspectRatio(contentMode: .fit)
+            
+                if colorScheme == .light {
+                        Image("budgetbuddybatch")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    } else {
+                        Image("budgetbuddybatch_black")
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    }
                 
                 TextField("E-mail", text: Binding($emailInput) ?? .constant(""))
                            .padding()
