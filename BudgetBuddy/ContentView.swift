@@ -34,8 +34,8 @@ struct EinnahmenResponse: Decodable {
 
 //Login-In Seite
 struct ContentView: View {
-    @State var emailInput: String?
-    @State var password: String?
+    @State var emailInput: String? = ""
+    @State var password: String? = ""
        
     private var email: String {
             emailInput?.lowercased() ?? ""

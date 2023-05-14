@@ -21,19 +21,18 @@ struct BenutzerView: View {
         VStack {
             if let benutzer = benutzer {
                 List {
-                    VStack(alignment: .leading) {
-                        Text("Email")
+                    Section(header: Text("Email")) {
+                        Text(benutzer.email)
                             .font(.headline)
-                        Text(email)
-                            .font(.subheadline)
-                            .foregroundColor(.gray)
                     }
-                    .padding()
-                    listItemView(title: "Name", value: benutzer.name)
-                    listItemView(title: "Geburtstag", value: formattedGeburtstag(benutzer.geburtstag))
-                    listItemView(title: "Kontostand", value: String(format: "%.2f", benutzer.kontostand))
-                    listItemView(title: "Buddy Name", value: benutzer.buddyName)
-                    listItemView(title: "Lieblingsgegenstand", value: benutzer.lieblingsGegenstand)
+                    
+                    Section(header: Text("Details")) {
+                        listItemView(title: "Name", value: benutzer.name)
+                        listItemView(title: "Geburtstag", value: formattedGeburtstag(benutzer.geburtstag))
+                        listItemView(title: "Kontostand", value: String(format: "%.2f", benutzer.kontostand))
+                        listItemView(title: "Buddy Name", value: benutzer.buddyName)
+                        listItemView(title: "Lieblingsgegenstand", value: benutzer.lieblingsGegenstand)
+                    }
                 }
             } else {
                 Text("Loading...")
@@ -42,7 +41,7 @@ struct BenutzerView: View {
         .sheet(item: $selectedItem) { item in
             if let benutzer = benutzer {
                 BenutzerEditView(inhalt: item.title, benutzer: benutzer, onSave: { updatedBenutzer in
-                    // Update the benutzer after saving
+                    // Update des Benutzers nach dem Editieren
                     self.benutzer = updatedBenutzer
                 })
             }
@@ -56,13 +55,17 @@ struct BenutzerView: View {
         let item = Item(title: title)
         
         return VStack(alignment: .leading) {
-            Text(title)
-                .font(.headline)
-            Text(value)
-                .font(.subheadline)
-                .foregroundColor(.gray)
+            HStack {
+                Text(title)
+                    .font(.headline)
+                Spacer()
+                Text(value)
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+            }
         }
         .padding()
+        .contentShape(Rectangle())
         .onTapGesture {
             selectedItem = item
             isSheetPresented = true
@@ -118,74 +121,78 @@ struct BenutzerEditView: View {
     @State private var editedValue: String = ""
     
     var body: some View {
-        VStack {
-            Text("\(inhalt) bearbeiten")
-                .font(.largeTitle)
+        NavigationView {
+            VStack{
+                Text("\(inhalt) bearbeiten")
+                    .font(.largeTitle)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .minimumScaleFactor(0.5)
+                
+                Form{
+                    createFieldView()
+                }
+                .navigationBarItems(trailing: Button(action: {
+                    saveAction()
+                }) {
+                    Text("Speichern")
+                }
+                .padding())
+            }
+        }
+    }
+    
+    @ViewBuilder
+    func createFieldView() -> some View {
+        switch inhalt {
+        case "Name":
+                Section(header: Text("Name")) {
+                    TextField("Name", text: $editedValue)
+                        .onAppear {
+                            editedValue = benutzer.name
+                        }
+                }
+        case "Geburtstag":
+            Section(header: Text("Geburtstag")) {
+                DatePicker(selection: $editedDate, displayedComponents: .date) {}
+                    .datePickerStyle(WheelDatePickerStyle())
+                    .onAppear {
+                        let dateFormatter = DateFormatter()
+                        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
+                        if let date = dateFormatter.date(from: benutzer.geburtstag) {
+                            editedDate = date
+                        }
+                    }
+            }
             
-            if inhalt == "Email" {
-                TextField("Email", text: $editedValue)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding()
-                    .onAppear {
-                        editedValue = benutzer.email
-                    }
-            } else if inhalt == "Name" {
-                TextField("Name", text: $editedValue)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding()
-                    .onAppear {
-                        editedValue = benutzer.name
-                    }
-            } else if inhalt == "Geburtstag" {
-                DatePicker(selection: $editedDate, displayedComponents: .date) {
-                }
-                .datePickerStyle(WheelDatePickerStyle())
-                .padding()
-                .onAppear {
-                    let dateFormatter = DateFormatter()
-                    dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
-                    if let date = dateFormatter.date(from: benutzer.geburtstag) {
-                        editedDate = date
-                    }
-                }
-
-            } else if inhalt == "Kontostand" {
-                TextField("Kontostand", text: $editedValue)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding()
+        case "Kontostand":
+            Section(header: Text("Kontostand")) {
+                TextField("0.00", text: $editedValue)
+                    .keyboardType(.decimalPad)
                     .onAppear {
                         editedValue = String(benutzer.kontostand)
                     }
-            } else if inhalt == "Buddy Name" {
+            }
+        case "Buddy Name":
+            Section(header: Text("Buddy Name")) {
                 TextField("Buddy Name", text: $editedValue)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding()
                     .onAppear {
                         editedValue = benutzer.buddyName
                     }
-            } else if inhalt == "Lieblingsgegenstand" {
+            }
+            
+        case "Lieblingsgegenstand":
+            Section(header: Text("Lieblingsgegenstand")) {
                 TextField("Lieblingsgegenstand", text: $editedValue)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding()
                     .onAppear {
                         editedValue = benutzer.lieblingsGegenstand
                     }
             }
-            
-            Button(action: {
-                // Speichern-Aktion durchführen
-                saveAction()
-            }) {
-                Text("Speichern")
-                    .foregroundColor(.white)
-                    .padding()
-                    .frame(maxWidth: .infinity)
-                    .background(Color.blue)
-                    .cornerRadius(5.0)
-            }
-            .padding()
+        default:
+            EmptyView()
         }
     }
+    
     func saveAction() {
         // Speichern-Aktion implementieren
         if inhalt == "Email" {
