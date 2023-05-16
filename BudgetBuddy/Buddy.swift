@@ -15,6 +15,8 @@ struct Buddy: View {
     @State private var messagesBenutzer: [String] = []
     @State private var messagesComp: [String] = []
     
+    @Environment(\.colorScheme) var colorScheme
+    
     
     
     var body: some View {
@@ -51,12 +53,21 @@ struct Buddy: View {
                                    }
                                    if messageComp != "" {
                                        HStack {
-                                           Text(messageComp)
-                                               .foregroundColor(.black)
-                                               .padding(.all, 10)
-                                               .background(Color.gray.opacity(0.2))
-                                               .cornerRadius(15)
-                                           Spacer()
+                                           if colorScheme == .light {
+                                               Text(messageComp)
+                                                   .foregroundColor(.black)
+                                                   .padding(.all, 10)
+                                                   .background(Color.gray.opacity(0.2))
+                                                   .cornerRadius(15)
+                                               Spacer()
+                                           }else{
+                                               Text(messageComp)
+                                                   .foregroundColor(.white)
+                                                   .padding(.all, 10)
+                                                   .background(Color.gray.opacity(0.3))
+                                                   .cornerRadius(15)
+                                               Spacer()
+                                           }
                                        }
                                    }
                                }
