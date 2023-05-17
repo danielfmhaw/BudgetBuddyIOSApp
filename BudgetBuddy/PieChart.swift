@@ -167,7 +167,7 @@ struct Kreisdiagramm: View {
         var gesamtEinnahmen: Double = 0
         
         for kategorie in kategorien {
-            guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/withKategorieAndArt/\(email)/\(kategorie)/\(art)") else {
+            guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/withKategorieAndArt/\(email)/\(kategorie)/\(art)?username=admin&password=password") else {
                 return
             }
             

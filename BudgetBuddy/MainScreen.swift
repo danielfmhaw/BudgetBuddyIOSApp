@@ -434,7 +434,7 @@ struct LoggedInView: View {
     
     //Löscht die Aktivität im Backend
     func deleteAktivitaet(id: Int,art:String) {
-        guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/\(id)") else {
+        guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/\(id)?username=admin&password=password") else {
             print("Ungültige URL")
             return
         }
@@ -464,7 +464,7 @@ struct LoggedInView: View {
 
     //Bekommt die Benutzerdaten aus dem Backend
     func getBenutzer() {
-        guard let url = URL(string: "http://localhost:8080/api/v1/benutzer/\(email)") else {
+        guard let url = URL(string: "http://localhost:8080/api/v1/benutzer/\(email)?username=admin&password=password") else {
             return
         }
         
@@ -486,7 +486,7 @@ struct LoggedInView: View {
     
     //Bekommt die Aktivitäten aus dem Backend
     func getAktivitaeten(name:String) {
-        guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/withArt/\(email)/\(name)") else {
+        guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/withArt/\(email)/\(name)?username=admin&password=password") else {
             print("Invalid URL")
             return
         }

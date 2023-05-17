@@ -147,7 +147,7 @@ struct ContentView: View {
     
     // Zieht die Benutzerdaten aus Backend und überprüft, ob successful oder failed
     func authenticate() -> Bool {
-        let url = URL(string: "http://localhost:8080/api/v1/benutzer")!
+        let url = URL(string: "http://localhost:8080/api/v1/benutzer?username=admin&password=password")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
