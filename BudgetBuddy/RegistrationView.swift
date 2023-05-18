@@ -97,7 +97,7 @@ struct RegistrationView: View {
                         .cornerRadius(5.0)
                 }
                 .fullScreenCover(isPresented: $showLoggedInView, content: {
-                    ContentView(emailInput: email, password: password)
+                    ContentView(emailInput: email, password: password,showRegistration: false)
                 })
             }
             .navigationBarTitle(Text("Registrieren"), displayMode: .inline)
