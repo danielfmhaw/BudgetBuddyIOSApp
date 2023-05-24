@@ -336,15 +336,17 @@ struct AnaylseView: View {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
         let date = dateFormatter.date(from: date)!
-        dateFormatter.dateFormat = "dd.MM"
-        return dateFormatter.string(from: date)
+        dateFormatter.dateFormat = "dd.MM.yyyy"
+        let year = Calendar.current.component(.year, from: date)
+        return "\(dateFormatter.string(from: date)), \(year)"
     }
 
     // Gibt das Tagesdatum im Format "dd.MM" (z.B. "29.04") für das angegebene Datum zurück
     func getDayDescription(from date: Date) -> String {
         let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "dd.MM"
-        return dateFormatter.string(from: date)
+        dateFormatter.dateFormat = "dd.MM.yyyy"
+        let year = Calendar.current.component(.year, from: date)
+        return "\(dateFormatter.string(from: date)), \(year)"
     }
 
 
