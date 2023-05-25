@@ -34,11 +34,16 @@ struct EditActivityView: View {
         NavigationView {
             Form {
                 Section(header: Text("Betrag")) {
-                    TextField("0.00", text: $betrag)
-                        .keyboardType(.decimalPad)
-                        .onAppear {
-                            betrag = String(activity.betrag)
-                        }
+                           TextField("0.00", text: Binding(
+                               get: { self.betrag },
+                               set: { newValue in
+                                   self.betrag = newValue.replacingOccurrences(of: ",", with: ".")
+                               })
+                           )
+                           .keyboardType(.decimalPad)
+                           .onAppear {
+                               betrag = String(activity.betrag)
+                           }
                 }
                 
                 Section(header: Text("Beschreibung")) {

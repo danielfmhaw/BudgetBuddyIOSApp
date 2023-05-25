@@ -205,7 +205,7 @@ struct BenutzerEditView: View {
             editedValue = dateFormatter.string(from: editedDate)
             benutzer.geburtstag = editedValue
         }else if inhalt == "Kontostand" {
-            if let kontostand = Double(editedValue) {
+            if let kontostand = Double(editedValue.replacingOccurrences(of: ",", with: ".")) {
                 benutzer.kontostand = kontostand
             }
         } else if inhalt == "Buddy Name" {

@@ -24,8 +24,13 @@ struct AddNewActivityView: View {
             Form {
                 //Felder für die jeweiligen Attribute
                 Section(header: Text("Betrag")) {
-                    TextField("0.00", text: $betrag)
-                        .keyboardType(.decimalPad)
+                           TextField("0.00", text: Binding(
+                               get: { self.betrag },
+                               set: { newValue in
+                                   self.betrag = newValue.replacingOccurrences(of: ",", with: ".")
+                               })
+                           )
+                           .keyboardType(.decimalPad)
                 }
 
                 Section(header: Text("Beschreibung")) {
