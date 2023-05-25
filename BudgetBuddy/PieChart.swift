@@ -30,6 +30,8 @@ struct Kreisdiagramm: View {
     //Ausgewähltes "Stück" (durch Klicken)
     @State private var selectedSlice: PieSlice?
     
+    @Environment(\.colorScheme) var colorScheme
+    
     var kategorieOhneGesamt: [Kategorie] {
         return kategorien.filter { $0.id != "Gesamt" }
     }
@@ -121,7 +123,7 @@ struct Kreisdiagramm: View {
                                 .font(.headline)
                         }
                         .padding()
-                        .background(Color.white)
+                        .background(colorScheme == .light ? Color.white : Color.black)
                         .cornerRadius(10)
                         .shadow(radius: 5)
                         .offset(x: sliceX, y: sliceY)

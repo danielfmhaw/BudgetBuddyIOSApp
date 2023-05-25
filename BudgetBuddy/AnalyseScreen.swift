@@ -27,6 +27,8 @@ struct AnaylseView: View {
     @State var currentActiveItemCost: Activity?
     @State var plodWidth : CGFloat = 0
     
+    @Environment(\.colorScheme) var colorScheme
+    
     var body: some View {
         VStack {
             Text("Zeitverlauf")
@@ -81,14 +83,20 @@ struct AnaylseView: View {
                                             .foregroundColor(.gray)
                                         
                                         Text("Einnahmen: \(String(format: "%.1f", currentActiveItemRevenue.amount))")
-                                            .font(.system(size: 14, weight: .bold))
+                                        .font(.system(size: 14, weight: .bold))
                                     }
                                     .padding(.horizontal,10)
                                     .padding(.vertical,4)
                                     .background{
                                         RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                            .fill(.white.shadow(.drop(radius:2)))
+                                            .fill(colorScheme == .light ? Color.white : Color.black)
+                                            .shadow(color: colorScheme == .light ? Color.black.opacity(0.2) : Color.clear, radius: 2)
                                     }
+                                    //Rahmen
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                            .stroke(colorScheme == .light ? Color.black : Color.white, lineWidth: 1)
+                                    )
                                 }
                         }
                     }
@@ -147,8 +155,14 @@ struct AnaylseView: View {
                                             .font(.caption)
                                             .foregroundColor(.gray)
                                         
-                                        Text("Ausgaben: \(String(format: "%.1f", currentActiveItemCost.amount))")
-                                            .font(.system(size: 14, weight: .bold))
+                                        if colorScheme == .light{
+                                            Text("Ausgaben: \(String(format: "%.1f", currentActiveItemCost.amount))")
+                                                .font(.system(size: 14, weight: .bold))
+                                        }else{
+                                            Text("Ausgaben: \(String(format: "%.1f", currentActiveItemCost.amount))")
+                                                .font(.system(size: 14, weight: .bold))
+                                                .foregroundColor(.black)
+                                        }
                                     }
                                     .padding(.horizontal,10)
                                     .padding(.vertical,4)

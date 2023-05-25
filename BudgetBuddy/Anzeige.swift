@@ -12,6 +12,8 @@ struct EinnahmenView: View {
     
     @State var selectedDisplayMode = 0
     
+    @Environment(\.colorScheme) var colorScheme
+    
     var kategorieOhneGesamt: [Kategorie] {
         return kategorien.filter { $0.id != "Gesamt" }
     }
@@ -69,8 +71,10 @@ struct EinnahmenView: View {
             return Color.orange
         } else if prozent >= 20 {
             return Color.yellow
-        } else {
+        } else if colorScheme == .light{
             return Color.black
+        }else{
+            return Color.white
         }
     }
 }

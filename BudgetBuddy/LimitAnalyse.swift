@@ -25,6 +25,8 @@ struct LimitAnalyseView: View {
        @State var limitAnalysen: [LimitAnalyse] = []
        @State var showList: Bool = true
        @State private  var currentActiveItem: Item?
+    
+       @Environment(\.colorScheme) var colorScheme
 
        var body: some View {
            NavigationView {
@@ -57,41 +59,67 @@ struct LimitAnalyseView: View {
                        }
                     // Anzeige als Balkendiagramm (BarMark)
                    } else {
-                       ScrollView {
-                           Chart(items) { item in
-                               BarMark(
-                                   x: .value("Department", item.type),
-                                   y: .value("Profit", item.value)
-                               )
-                               .foregroundStyle(
+                       GeometryReader { geometry in
+                           ScrollView {
+                               Chart(items) { item in
+                                   BarMark(
+                                    x: .value("Department", item.type),
+                                    y: .value("Profit", item.value)
+                                   )
+                                   .foregroundStyle(
                                     item.value >= 0 ? Color.green.gradient : Color.red.gradient
-                               )
-                               // Zeigt Daten des geraden ausgwählten Balken an
-                               if let currentActiveItem,currentActiveItem.type == item.type {
-                                   RuleMark(x: .value("Type", currentActiveItem.type))
-                                       .lineStyle(.init(lineWidth: 3, miterLimit: 3, dash:[7],dashPhase:5))
-                                       .annotation(position: .bottom){
-                                           VStack(){
-                                               Text("\(currentActiveItem.type)")
-                                                   .font(.caption)
-                                                   .foregroundColor(.gray)
-                                               
-                                               Text("Überschuss: \(String(format: "%.1f", currentActiveItem.value))")
-                                                   .font(.system(size: 14, weight: .bold))
+                                   )
+                                   // Zeigt Daten des geraden ausgwählten Balken an
+                                   if let currentActiveItem,currentActiveItem.type == item.type {
+                                       RuleMark(x: .value("Type", currentActiveItem.type))
+                                           .foregroundStyle(colorScheme == .light ? Color.black : Color.white)
+                                           .lineStyle(.init(lineWidth: 3, miterLimit: 3, dash:[7],dashPhase:5))
+                                           .annotation() {
+                                               VStack() {
+                                                   Text("\(currentActiveItem.type)")
+                                                       .font(.caption)
+                                                       .foregroundColor(.gray)
+                                                   
+                                                   Text("Überschuss: \(String(format: "%.1f", currentActiveItem.value))")
+                                                       .font(.system(size: 14, weight: .bold))
+                                               }
+                                               .padding(.horizontal, 10)
+                                               .padding(.vertical, 4)
+                                               .background(
+                                                   RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                                       .fill(colorScheme == .light ? Color.white : Color.black)
+                                                       .shadow(color: colorScheme == .light ? Color.black.opacity(0.2) : Color.clear, radius: 2)
+                                               )
+                                               .overlay(
+                                                   RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                                       .stroke(colorScheme == .light ? Color.black : Color.white, lineWidth: 1)
+                                               )
+                                               .offset(y:200)
                                            }
-                                           .padding(.horizontal,10)
-                                           .padding(.vertical,4)
-                                           .background{
-                                               RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                                   .fill(.white.shadow(.drop(radius:2)))
-                                           }
-                                       }
+                                   }
                                }
+                               .chartPlotStyle { plotContent in
+                                   plotContent
+                                       .background(.gray.opacity(0.2))
+                                       .border(Color.gray.opacity(0.6), width: 0.5)
+                               }
+                               //                           .chartXAxis {
+                               //                               AxisMarks(values: .automatic) { _ in
+                               //                                   AxisValueLabel()
+                               //                                       .foregroundStyle(colorScheme == .light ? Color.black : Color.white)
+                               //                               }
+                               //                           }
+                               //                           .chartYAxis {
+                               //                               AxisMarks(values: .automatic) { _ in
+                               //                                   AxisValueLabel()
+                               //                                       .foregroundStyle(colorScheme == .light ? Color.black : Color.white)
+                               //                               }
+                               //                           }
+                               .padding(.horizontal, 20)
+                               .padding(.vertical, 10)
+                               .frame(height: geometry.size.height)
+                               
                            }
-                           .padding(.horizontal, 20)
-                           .padding(.vertical, 10)
-                           .frame(height: 400)
-                           
                        }
                        // Speichert die Daten des gerade ausgwählten Diagramms
                        .chartOverlay(content: {proxy in
