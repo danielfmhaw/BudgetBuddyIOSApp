@@ -87,6 +87,8 @@ struct ContentView: View {
                     Button(action: {
                         if authenticate() {
                             showLoggedInView = true
+                            UserDefaults.standard.set(Date(), forKey: "lastLoginTime")
+                            UserDefaults.standard.set(emailInput, forKey: "savedEmail")
                         } else {
                             loginFailed = true
                         }
@@ -109,6 +111,8 @@ struct ContentView: View {
                     Button(action: {
                         if authenticate() {
                             showLoggedInView = true
+                            UserDefaults.standard.set(Date(), forKey: "lastLoginTime")
+                            UserDefaults.standard.set(emailInput, forKey: "savedEmail")
                         } else {
                             loginFailed = true
                         }
@@ -157,10 +161,26 @@ struct ContentView: View {
             .padding(.horizontal, 20)
             .navigationBarTitle(Text("Login"), displayMode: .inline)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .onAppear{
+            .onAppear {
                 showLoggedInView = false
                 loginFailed = false
+
+                if let lastLoginTime = UserDefaults.standard.object(forKey: "lastLoginTime") as? Date {
+                    let currentTime = Date()
+                    let timeInterval = currentTime.timeIntervalSince(lastLoginTime)
+                    let twentyFourHours: TimeInterval = 24 * 60 * 60
+
+                    if timeInterval <= twentyFourHours {
+                        if let savedEmail = UserDefaults.standard.string(forKey: "savedEmail") {
+                            emailInput = savedEmail
+                        }
+                        if emailInput?.count ?? 0 > 0 {
+                            showLoggedInView = true
+                        }
+                    }
+                }
             }
+
             // Wenn man die Seite verlässt
             //.onDisappear {
             //    emailInput = ""
@@ -171,7 +191,7 @@ struct ContentView: View {
     
     //Checkt, ob die Email schon existiert im Backend
     func checkEmailExists(email: String) -> Bool {
-        guard let url = URL(string: "http://localhost:8080/api/v1/benutzer/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/benutzer/\(email)?username=admin&password=password") else {
             return false
         }
 
@@ -205,7 +225,7 @@ struct ContentView: View {
     // Zieht die Benutzerdaten aus Backend und überprüft, ob successful oder failed
     func authenticate() -> Bool {
         emailExits=checkEmailExists(email: emailInput ?? "")
-        let url = URL(string: "http://localhost:8080/api/v1/benutzer?username=admin&password=password")!
+        let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/benutzer?username=admin&password=password")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -219,7 +239,7 @@ struct ContentView: View {
         URLSession.shared.dataTask(with: request) { data, response, error in
             defer { semaphore.signal() }
             
-            guard let data = data, let response = response as? HTTPURLResponse, error == nil else {
+            guard let _ = data, let response = response as? HTTPURLResponse, error == nil else {
                 print("Error: \(error?.localizedDescription ?? "Unknown error")")
                 return
             }
@@ -244,6 +264,8 @@ struct ContentView: View {
         self.password=""
         self.loginFailed = false
         self.showRegistration = true
+        UserDefaults.standard.set(nil, forKey: "lastLoginTime")
+        UserDefaults.standard.set(nil, forKey: "savedEmail")
     }
 }
 
@@ -338,7 +360,7 @@ struct PasswortUpdate:View{
     
     // Zieht den Benuter aus dem Backend
     func fetchData(email:String) {
-        guard let url = URL(string: "http://localhost:8080/api/v1/benutzer/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/benutzer/\(email)?username=admin&password=password") else {
             print("Ungültige URL")
             return
         }
@@ -371,7 +393,7 @@ struct PasswortUpdate:View{
     func sendToBackend() {
         benutzer?.password=confirmPassword
         
-        guard let url = URL(string: "http://localhost:8080/api/v1/benutzer?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/benutzer?username=admin&password=password") else {
             return
         }
         

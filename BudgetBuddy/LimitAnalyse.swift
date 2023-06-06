@@ -194,7 +194,7 @@ struct LimitAnalyseView: View {
 
     // Bekommt alle Limits aus dem Backend für den jeweiligen Benutzer (-email)
     private func fetchLimits() {
-        guard let url = URL(string: "http://localhost:8080/api/v1/limit/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/limit/\(email)?username=admin&password=password") else {
             print("Invalid URL")
             return
         }
@@ -215,7 +215,7 @@ struct LimitAnalyseView: View {
     
     // Bekommt alle Aktivtitäten aus dem Backend mit Art "Ausgaben"
     private func fetchActivities() {
-        guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/withArt/\(email)/Ausgaben?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/aktivitaet/withArt/\(email)/Ausgaben?username=admin&password=password") else {
             print("Invalid URL")
             return
         }

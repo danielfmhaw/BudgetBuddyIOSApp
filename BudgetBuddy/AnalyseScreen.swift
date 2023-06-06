@@ -367,7 +367,7 @@ struct AnaylseView: View {
     
     //Bekommt die Einnahmen oder Ausgaben (Entscheidung über art:String) von einem Benutzer (email) zu einer möglichen Kategorie
     func getAktivitaeten() {
-        guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/aktivitaet/\(email)?username=admin&password=password") else {
             print("Invalid URL")
             return
         }

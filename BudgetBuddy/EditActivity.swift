@@ -104,7 +104,7 @@ struct EditActivityView: View {
     
     //Updated die entsprechende Aktivtät im Backend
     func saveActivity(_ activity: Aktivitaet) {
-        guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/aktivitaet?username=admin&password=password") else {
             print("Invalid URL")
             return
         }
