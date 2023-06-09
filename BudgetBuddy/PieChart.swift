@@ -10,7 +10,7 @@ struct PieSlice: Identifiable {
 }
 
 struct Kreisdiagramm: View {
-    @State private var kategorien: [Kategorie] = []
+    let kategorien: [Kategorie]
     let art: String
     let email:String
     let dispatchGroup = DispatchGroup()
@@ -132,10 +132,7 @@ struct Kreisdiagramm: View {
                 .frame(height: UIScreen.main.bounds.height / 3)
 
             }
-        }
-        .onAppear {
-            getEinnahmen(art: art)
-        }
+        }       
     }
     
     // Berechnet die Einnahmen von allen Kategorien der ausgwählten Art
@@ -174,41 +171,5 @@ struct Kreisdiagramm: View {
         }
         
         return (kategorienListe, einnahmenListe)
-    }
-    
-    //Bekommt die Einnahmen oder Ausgaben (Entscheidung über art:String) von einem Benutzer (email) zu einer möglichen Kategorie
-    private func getEinnahmen(art:String) {
-        let kategorien = ["Drogerie","Freizeit","Unterhaltung","Lebensmittel","Hobbys","Wohnen","Haushalt","Sonstiges","Technik","Finanzen","Restaurant","Shopping"]
-        var gesamtEinnahmen: Double = 0
-        
-        for kategorie in kategorien {
-            guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/withKategorieAndArt/\(email)/\(kategorie)/\(art)?username=admin&password=password") else {
-                return
-            }
-            
-            dispatchGroup.enter()
-            URLSession.shared.dataTask(with: url) { (data, response, error) in
-                guard let data = data, error == nil else {
-                    print("Error fetching data: \(error?.localizedDescription ?? "Unknown error")")
-                    dispatchGroup.leave()
-                    return
-                }
-                
-                if let einnahmenArr = try? JSONDecoder().decode([EinnahmenResponse].self, from: data) {
-                    let einnahmen = einnahmenArr.reduce(0, { $0 + $1.betrag })
-                    DispatchQueue.main.async {
-                        self.kategorien.append(Kategorie(id: kategorie, einnahmen: einnahmen))
-                        gesamtEinnahmen += einnahmen
-                    }
-                } else {
-                    print("Invalid response from server")
-                }
-                dispatchGroup.leave()
-            }.resume()
-        }
-        
-        dispatchGroup.notify(queue: .main) {
-            self.kategorien.append(Kategorie(id: "Gesamt", einnahmen: gesamtEinnahmen))
-        }
     }
 }

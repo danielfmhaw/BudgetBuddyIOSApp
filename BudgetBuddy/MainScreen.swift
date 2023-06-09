@@ -46,6 +46,8 @@ struct LoggedInView: View {
     @State private var gesamtAusgaben: Double = 0.0
     
     @State var targets: [Target] = []
+    @State private var kategorieneinnahmen: [Kategorie] = []
+    @State private var kategorienausgaben: [Kategorie] = []
     
     @Environment(\.colorScheme) var colorScheme
     
@@ -73,7 +75,7 @@ struct LoggedInView: View {
                         
                         
                         VStack(alignment: .leading) {
-                            NavigationLink(destination: Kreisdiagramm(art: "Einnahmen", email: email)) {
+                            NavigationLink(destination: Kreisdiagramm(kategorien: kategorieneinnahmen, art: "Einnahmen", email: email)) {
                                 VStack(alignment: .leading) {
                                     HStack(spacing: 8) {
                                         Image(systemName: "eurosign.circle.fill")
@@ -86,28 +88,29 @@ struct LoggedInView: View {
                                             .foregroundColor(.primary)
                                         Spacer()
                                     }
-                                    
-                                    if !aktivitaetenSummen.isEmpty {
-                                        HStack {
-                                            Text("Letzte 12 Monate:")
-                                                .font(.subheadline)
-                                                .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
-                                            
-                                            Text("\(String(format: "%.2f", aktivitaetenSummen[0])) €")
-                                                .foregroundColor(.green)
-                                                .font(.subheadline)
-                                            Spacer()
-                                        }
-                                    }
-                                    HStack {
-                                        Text("Gesamteinnahmen:")
-                                            .font(.subheadline)
-                                            .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
+
+                                    if !kategorieneinnahmen.isEmpty {
+                                        let filteredSortedKategorien = kategorieneinnahmen.filter { $0.einnahmen != 0 }.sorted { $0.einnahmen > $1.einnahmen }
                                         
-                                        Text("\(String(format: "%.2f", gesamtEinnahmen)) €")
-                                            .foregroundColor(.green)
-                                            .font(.subheadline)
-                                        Spacer()
+                                        let endIndex = min(filteredSortedKategorien.count, 4)
+                                        
+                                        if endIndex > 1 {
+                                            ForEach(1..<endIndex, id: \.self) { index in
+                                                let kategorie = filteredSortedKategorien[index]
+                                                HStack {
+                                                    Text("\(index). \(kategorie.id)")
+                                                        .font(.subheadline)
+                                                        .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
+                                                    
+                                                    Spacer()
+                                                    
+                                                    Text("\(String(format: "%.2f", kategorie.einnahmen)) €")
+                                                        .font(.subheadline)
+                                                        .foregroundColor(.green)
+                                                }
+                                                .padding(.horizontal, 4)
+                                            }
+                                        }
                                     }
                                 }
                                 .padding()
@@ -119,7 +122,7 @@ struct LoggedInView: View {
                                 )
                                 .shadow(color: .gray, radius: 1, x: 0, y: 1)
                             }
-                            NavigationLink(destination: Kreisdiagramm(art: "Ausgaben", email: email)) {
+                            NavigationLink(destination: Kreisdiagramm(kategorien: kategorienausgaben, art: "Ausgaben", email: email)) {
                                 VStack(alignment: .leading) {
                                     HStack(spacing: 8) {
                                         Image(systemName: "eurosign.square.fill")
@@ -133,27 +136,28 @@ struct LoggedInView: View {
                                         Spacer()
                                     }
                                     
-                                    if !aktivitaetenSummen.isEmpty {
-                                        HStack {
-                                            Text("Letzte 12 Monate:")
-                                                .font(.subheadline)
-                                                .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
-                                            
-                                            Text("\(String(format: "%.2f", aktivitaetenSummen[3])) €")
-                                                .foregroundColor(.green)
-                                                .font(.subheadline)
-                                            Spacer()
-                                        }
-                                    }
-                                    HStack {
-                                        Text("Gesamtausgaben:")
-                                            .font(.subheadline)
-                                            .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
+                                    if !kategorienausgaben.isEmpty {
+                                        let filteredSortedKategorien = kategorienausgaben.filter { $0.einnahmen != 0 }.sorted { $0.einnahmen > $1.einnahmen }
                                         
-                                        Text("\(String(format: "%.2f", gesamtAusgaben)) €")
-                                            .foregroundColor(.green)
-                                            .font(.subheadline)
-                                        Spacer()
+                                        let endIndex = min(filteredSortedKategorien.count, 4)
+                                        
+                                        if endIndex > 1 {
+                                            ForEach(1..<endIndex, id: \.self) { index in
+                                                let kategorie = filteredSortedKategorien[index]
+                                                HStack {
+                                                    Text("\(index). \(kategorie.id)")
+                                                        .font(.subheadline)
+                                                        .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
+                                                    
+                                                    Spacer()
+                                                    
+                                                    Text("\(String(format: "%.2f", kategorie.einnahmen)) €")
+                                                        .font(.subheadline)
+                                                        .foregroundColor(.green)
+                                                }
+                                                .padding(.horizontal, 4)
+                                            }
+                                        }
                                     }
                                 }
                                 .padding()
@@ -340,9 +344,10 @@ struct LoggedInView: View {
                     }
                     .onAppear {
                         getAktivitaeten(name:"Beides")
+                        getEinnahmen()
                         fetchLimits()
                         getBenutzer()
-                        fetchTargets()
+                        fetchTargets()                    
                     }
                     .navigationBarTitle(Text("Übersicht"), displayMode: .inline)
                 }
@@ -350,6 +355,13 @@ struct LoggedInView: View {
             .tabItem{
                 Image(systemName: "chart.bar.fill")
                 Text("Übersicht")
+            }
+            .onAppear {
+                getAktivitaeten(name:"Beides")
+                getEinnahmen()
+                fetchLimits()
+                getBenutzer()
+                fetchTargets()
             }
 
             //NavigationView für die "Einnahmen" (Anzeigen, Neue hinzufügen, editieren, löschen)
@@ -732,6 +744,89 @@ struct LoggedInView: View {
         }.resume()
     }
     
+    
+    //Bekommt die Einnahmen oder Ausgaben (Entscheidung über art:String) von einem Benutzer (email) zu einer möglichen Kategorie
+    private func getEinnahmen() {
+        let kategorien = ["Drogerie","Freizeit","Unterhaltung","Lebensmittel","Hobbys","Wohnen","Haushalt","Sonstiges","Technik","Finanzen","Restaurant","Shopping"]
+        var gesamtEinnahmen: Double = 0
+        var gesamtAusgaben: Double = 0
+
+        let dispatchGroup = DispatchGroup() // Erstelle eine neue DispatchGroup
+
+        for kategorie in kategorien {
+            guard let urlEinnahmen = URL(string: "http://localhost:8080/api/v1/aktivitaet/withKategorieAndArt/\(email)/\(kategorie)/Einnahmen?username=admin&password=password") else {
+                return
+            }
+            
+            guard let urlAusgaben = URL(string: "http://localhost:8080/api/v1/aktivitaet/withKategorieAndArt/\(email)/\(kategorie)/Ausgaben?username=admin&password=password") else {
+                return
+            }
+
+            dispatchGroup.enter()
+                   URLSession.shared.dataTask(with: urlEinnahmen) { (data, response, error) in
+                       guard let data = data, error == nil else {
+                           print("Error fetching data: \(error?.localizedDescription ?? "Unknown error")")
+                           dispatchGroup.leave()
+                           return
+                       }
+
+                       if let einnahmenArr = try? JSONDecoder().decode([EinnahmenResponse].self, from: data) {
+                           let einnahmen = einnahmenArr.reduce(0, { $0 + $1.betrag })
+                           DispatchQueue.main.async {
+                               if let existingKategorieIndex = self.kategorieneinnahmen.firstIndex(where: { $0.id == kategorie }) {
+                                   self.kategorieneinnahmen[existingKategorieIndex].einnahmen = einnahmen
+                               } else {
+                                   self.kategorieneinnahmen.append(Kategorie(id: kategorie, einnahmen: einnahmen))
+                               }
+                               gesamtEinnahmen += einnahmen
+                           }
+                       } else {
+                           print("Invalid response from server")
+                       }
+                       dispatchGroup.leave()
+                   }.resume()
+            
+            dispatchGroup.enter()
+            URLSession.shared.dataTask(with: urlAusgaben) { (data, response, error) in
+                guard let data = data, error == nil else {
+                    print("Error fetching data: \(error?.localizedDescription ?? "Unknown error")")
+                    dispatchGroup.leave()
+                    return
+                }
+
+                if let ausgabenArr = try? JSONDecoder().decode([EinnahmenResponse].self, from: data) {
+                    let ausgaben = ausgabenArr.reduce(0, { $0 + $1.betrag })
+                    DispatchQueue.main.async {
+                        if let existingKategorieIndex = self.kategorienausgaben.firstIndex(where: { $0.id == kategorie }) {
+                            self.kategorienausgaben[existingKategorieIndex].einnahmen = ausgaben
+                        } else {
+                            self.kategorienausgaben.append(Kategorie(id: kategorie, einnahmen: ausgaben))
+                        }
+                        gesamtAusgaben += ausgaben
+                    }
+                } else {
+                    print("Invalid response from server")
+                }
+                dispatchGroup.leave()
+            }.resume()
+
+        }
+
+        dispatchGroup.notify(queue: .main) {
+            if let existingGesamtEinnahmenIndex = self.kategorieneinnahmen.firstIndex(where: { $0.id == "Gesamt" }) {
+                self.kategorieneinnahmen[existingGesamtEinnahmenIndex].einnahmen = gesamtEinnahmen
+            } else {
+                self.kategorieneinnahmen.append(Kategorie(id: "Gesamt", einnahmen: gesamtEinnahmen))
+            }
+            
+            if let existingGesamtAusgabenIndex = self.kategorienausgaben.firstIndex(where: { $0.id == "Gesamt" }) {
+                self.kategorienausgaben[existingGesamtAusgabenIndex].einnahmen = gesamtAusgaben
+            } else {
+                self.kategorienausgaben.append(Kategorie(id: "Gesamt", einnahmen: gesamtAusgaben))
+            }
+        }
+    }
+    
     // Bekommt alle Limits aus dem Backend für den jeweiligen Benutzer (-email)
     private func fetchLimits() {
         guard let url = URL(string: "http://localhost:8080/api/v1/limit/\(email)?username=admin&password=password") else {
@@ -847,6 +942,7 @@ struct LoggedInView: View {
             Spacer()
             getArrowView(for: value)
         }
+        .padding(.horizontal, 4)
     }
     
     func getArrowView(for value: Double) -> some View {
