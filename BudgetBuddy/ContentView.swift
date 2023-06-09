@@ -16,6 +16,8 @@ struct Aktivitaet: Codable, Identifiable {
     var art: String
     var benutzer: Benutzer
     var datum: String
+    var savingsTarget: Target?
+    var anteil: Double?
 }
 
 //Struktur eines Benutzers
@@ -191,7 +193,7 @@ struct ContentView: View {
     
     //Checkt, ob die Email schon existiert im Backend
     func checkEmailExists(email: String) -> Bool {
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/benutzer/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "http://localhost:8080/api/v1/benutzer/\(email)?username=admin&password=password") else {
             return false
         }
 
@@ -225,7 +227,7 @@ struct ContentView: View {
     // Zieht die Benutzerdaten aus Backend und überprüft, ob successful oder failed
     func authenticate() -> Bool {
         emailExits=checkEmailExists(email: emailInput ?? "")
-        let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/benutzer?username=admin&password=password")!
+        let url = URL(string: "http://localhost:8080/api/v1/benutzer?username=admin&password=password")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -360,7 +362,7 @@ struct PasswortUpdate:View{
     
     // Zieht den Benuter aus dem Backend
     func fetchData(email:String) {
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/benutzer/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "http://localhost:8080/api/v1/benutzer/\(email)?username=admin&password=password") else {
             print("Ungültige URL")
             return
         }
@@ -393,7 +395,7 @@ struct PasswortUpdate:View{
     func sendToBackend() {
         benutzer?.password=confirmPassword
         
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/benutzer?username=admin&password=password") else {
+        guard let url = URL(string: "http://localhost:8080/api/v1/benutzer?username=admin&password=password") else {
             return
         }
         

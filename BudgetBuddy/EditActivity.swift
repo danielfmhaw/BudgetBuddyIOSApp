@@ -15,11 +15,18 @@ struct EditActivityView: View {
     let kategorien = ["Lebensmittel","Finanzen","Freizeit","Unterhaltung","Hobbys","Wohnen","Haushalt","Technik","Shopping","Restaurant","Drogerie","Sonstiges"]
     @Environment(\.presentationMode) var presentationMode
     
+    @State var targets: [Target] = []
+    @State private var selectedTarget = ""
+    @State var beschreibungTargets: [String] = []
+    @State var selectedDisplayMode = 0
+    @State private var isChecked: Bool = false
+    
     init(activity: Aktivitaet) {
         self.activity = activity
         self._betrag = State(initialValue: String(activity.betrag))
         self._beschreibung = State(initialValue: activity.beschreibung)
         self._selectedKategorie = State(initialValue: activity.kategorie)
+        self._selectedTarget = State(initialValue: activity.savingsTarget?.targetname ?? "")
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
         if let date = dateFormatter.date(from: activity.datum) {
@@ -63,6 +70,38 @@ struct EditActivityView: View {
                             .padding(.leading, 16)
                 }
                 
+                if(activity.art=="Einnahmen"){
+                    VStack(){
+                        Toggle(isOn: $isChecked) {
+                           Text("Sparplan anlegen?")
+                       }
+                        if(isChecked){
+                            Section(){
+                                HStack{
+                                    Spacer()
+                                    Text("Sparziel:")
+                                    Picker(selection: $selectedTarget, label: Text("")) {
+                                        if selectedTarget.isEmpty {
+                                            Text("Auswählen")
+                                        }
+                                        ForEach(beschreibungTargets, id: \.self) { targetname in
+                                            Text(targetname)
+                                        }
+                                    }
+                                    .pickerStyle(MenuPickerStyle())
+                                }
+                                
+                                Picker("Sparziel in % beteiligen", selection: $selectedDisplayMode) {
+                                    Text("5%").tag(0)
+                                    Text("10%").tag(1)
+                                    Text("20%").tag(2)
+                                }
+                                .pickerStyle(SegmentedPickerStyle())
+                            }
+                        }
+                    }
+                }
+                
                 Section(header: Text("Datum")) {
                     DatePicker("Datum", selection: $datum, displayedComponents: [.date])
                         //.datePickerStyle(WheelDatePickerStyle()) --> nimmt bisschen zu viel Platz weg
@@ -80,67 +119,112 @@ struct EditActivityView: View {
                         let formatter = DateFormatter()
                         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
                         let dateString = formatter.string(from: datum)
-                        let updatedAktivitaet = Aktivitaet(
-                            id: activity.id,
-                            betrag: betragDouble,
-                            beschreibung: beschreibung,
-                            kategorie: selectedKategorie,
-                            art: activity.art,
-                            benutzer: activity.benutzer,
-                            datum: dateString
-                        )
-                        saveActivity(updatedAktivitaet)
+
+                        var newAktivitaet: Aktivitaet?
+                        
+                        if (isChecked && !selectedTarget.isEmpty) {
+                            if let target = targets.first(where: { $0.targetname == selectedTarget }) {
+                                newAktivitaet = Aktivitaet(id: activity.id, betrag: betragDouble, beschreibung: beschreibung, kategorie: selectedKategorie, art: activity.art, benutzer: activity.benutzer, datum: dateString, savingsTarget: target, anteil: calculateDisplayMode(with: selectedDisplayMode))
+                            }
+                        } else {
+                            newAktivitaet = Aktivitaet(id: activity.id, betrag: betragDouble, beschreibung: beschreibung, kategorie: selectedKategorie, art: activity.art, benutzer: activity.benutzer, datum: dateString)
+                        }
+
+                        if let aktivitaet = newAktivitaet {
+                            saveActivity(aktivitaet)
+                        }
                         presentationMode.wrappedValue.dismiss()
                     }
                 }) {
                     Text("Speichern")
                 }
             }
+            .onAppear {
+                fetchTargets(email: activity.benutzer.email)
+            }
             .navigationBarTitle(Text("Aktivität bearbeiten"), displayMode: .inline)
         }
     }
-
-
     
-    //Updated die entsprechende Aktivtät im Backend
+    //Umwandlung des Pickers
+    func calculateDisplayMode(with selectedDisplayMode: Int) -> Double {
+        let betrag: Double
+        switch selectedDisplayMode {
+        case 2:
+            betrag = 0.2
+        case 1:
+            betrag = 0.1
+        default:
+            betrag = 0.05
+        }
+        return betrag
+    }
+
+    // Bekommt die Targets aus dem Backend
+    func fetchTargets(email: String) {
+        guard let url = URL(string: "http://localhost:8080/api/v1/targets/\(email)?username=admin&password=password") else {
+            print("Invalid URL")
+            return
+        }
+
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let data = data {
+                if let decodedResponse = try? JSONDecoder().decode([Target].self, from: data) {
+                    DispatchQueue.main.async {
+                        targets = decodedResponse
+                        if(targets.count>0){
+                            beschreibungTargets.append(contentsOf:  decodedResponse.map { $0.targetname })
+                        }else{
+                            beschreibungTargets.append("Keine Sparziele")
+                        }
+                        if(activity.savingsTarget != nil){
+                            isChecked = true
+                        }
+                        if(activity.anteil == 0.2 ){
+                            selectedDisplayMode = 2
+                        }else if(activity.anteil == 0.1){
+                            selectedDisplayMode = 1
+                        }else{
+                            selectedDisplayMode = 0
+                        }
+                    }
+                    return
+                }
+            }
+            print("Fetch failed: \(error?.localizedDescription ?? "Unknown error")")
+        }.resume()
+    }
+    
+    //Aktivtät updaten (per PUT)
     func saveActivity(_ activity: Aktivitaet) {
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/aktivitaet?username=admin&password=password") else {
+        guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet?username=admin&password=password") else {
             print("Invalid URL")
             return
         }
         
-        let updatedAktivitaet = Aktivitaet(
-            id: activity.id,
-            betrag: activity.betrag,
-            beschreibung: activity.beschreibung,
-            kategorie: activity.kategorie,
-            art: activity.art,
-            benutzer: activity.benutzer,
-            datum: activity.datum
-        )
+        var request = URLRequest(url: url)
+        request.httpMethod = "PUT"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        guard let encodedActivity = try? JSONEncoder().encode(updatedAktivitaet) else {
+        guard let encodedActivity = try? JSONEncoder().encode(activity) else {
             print("Failed to encode activity")
             return
         }
         
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = encodedActivity
         
         URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let _ = data, error == nil else {
-                print("Error: \(error?.localizedDescription ?? "Unknown error")")
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
                 return
             }
             
-            if let httpResponse = response as? HTTPURLResponse,
-               (200...299).contains(httpResponse.statusCode) {
+            if let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) {
                 print("Successfully saved activity")
             } else {
                 print("Invalid response from server")
             }
         }.resume()
     }
+
 }

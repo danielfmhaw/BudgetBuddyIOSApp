@@ -12,12 +12,17 @@ struct AddNewActivityView: View {
 
     @State var betrag: String = ""
     @State var beschreibung: String = ""
+    @State var targets: [Target] = []
+    @State var selectedDisplayMode = 0
 
     @State private var selectedKategorie = "Lebensmittel"
     let kategorien = ["Lebensmittel","Finanzen","Freizeit","Unterhaltung","Hobbys","Wohnen","Haushalt","Technik","Shopping","Restaurant","Drogerie","Sonstiges"]
+    @State private var selectedTarget = ""
+    @State var beschreibungTargets: [String] = []
     @State var datum = Date()
     @Environment(\.presentationMode) var presentationMode
     
+    @State private var isChecked: Bool = false
 
     var body: some View {
         NavigationView {
@@ -46,6 +51,35 @@ struct AddNewActivityView: View {
                             .pickerStyle(MenuPickerStyle())
                             .padding(.leading, 16)
                 }
+                
+                if(actart=="Einnahmen"){
+                    VStack(){
+                        Toggle(isOn: $isChecked) {
+                           Text("Sparplan anlegen?")
+                       }
+                        if(isChecked){
+                            Section(){
+                                HStack{
+                                    Spacer()
+                                    Text("Sparziel:")
+                                    Picker(selection: $selectedTarget, label: Text("")) {
+                                        ForEach(beschreibungTargets, id: \.self) { targetname in
+                                            Text(targetname)
+                                        }
+                                    }
+                                    .pickerStyle(MenuPickerStyle())
+                                }
+                                
+                                Picker("Sparziel in % beteiligen", selection: $selectedDisplayMode) {
+                                    Text("5%").tag(0)
+                                    Text("10%").tag(1)
+                                    Text("20%").tag(2)
+                                }
+                                .pickerStyle(SegmentedPickerStyle())
+                            }
+                        }
+                    }
+                }
 
                 // Neue Section-Block hinzufügen, um das Datum anzuzeigen
                 Section(header: Text("Datum")) {
@@ -62,27 +96,79 @@ struct AddNewActivityView: View {
                         let formatter = DateFormatter()
                         formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
                         let dateString = formatter.string(from: datum)
-                        let newAktivitaet = Aktivitaet(id: 0, betrag: betragDouble, beschreibung: beschreibung, kategorie: selectedKategorie, art: actart ?? "", benutzer: user, datum: dateString)
-                        saveActivity(newAktivitaet)
+                        var newAktivitaet: Aktivitaet?
+
+                        if (isChecked) {
+                            if let target = targets.first(where: { $0.targetname == selectedTarget }) {
+                                newAktivitaet = Aktivitaet(id: 0, betrag: betragDouble, beschreibung: beschreibung, kategorie: selectedKategorie, art: actart ?? "", benutzer: user, datum: dateString, savingsTarget: target)
+                            }
+                        } else {
+                            newAktivitaet = Aktivitaet(id: 0, betrag: betragDouble, beschreibung: beschreibung, kategorie: selectedKategorie, art: actart ?? "", benutzer: user, datum: dateString, savingsTarget: nil)
+                        }
+
+                        if let aktivitaet = newAktivitaet {
+                            saveActivity(aktivitaet, targetname: selectedTarget)
+                        }
                         presentationMode.wrappedValue.dismiss()
                     }
                 }) {
                     Text("Hinzufügen")
                 }
             }
+            .onAppear {
+                fetchTargets(email: user?.email ?? "")
+            }
             .navigationBarTitle(Text("Neue Aktivität"), displayMode: .inline)
         }
     }
-
-
-    //Speichert die Aktivität im Backend ab
-    func saveActivity(_ activity: Aktivitaet) {
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/aktivitaet?username=admin&password=password") else {
+    
+    // Bekommt die Targets aus dem Backend
+    func fetchTargets(email: String) {
+        guard let url = URL(string: "http://localhost:8080/api/v1/targets/\(email)?username=admin&password=password") else {
             print("Invalid URL")
             return
         }
 
-        let newAktivitaet = Aktivitaet(id: activity.id, betrag: activity.betrag, beschreibung: activity.beschreibung, kategorie: activity.kategorie, art: activity.art, benutzer: activity.benutzer,datum: activity.datum)
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let data = data {
+                if let decodedResponse = try? JSONDecoder().decode([Target].self, from: data) {
+                    DispatchQueue.main.async {
+                        targets = decodedResponse
+                        if(targets.count>0){
+                            beschreibungTargets.append(contentsOf:  decodedResponse.map { $0.targetname })
+                            selectedTarget = beschreibungTargets.first ?? ""
+                        }else{
+                            beschreibungTargets.append("Keine Sparziele")
+                        }
+                    }
+                    return
+                }
+            }
+            print("Fetch failed: \(error?.localizedDescription ?? "Unknown error")")
+        }.resume()
+    }
+    
+    func calculateDisplayMode(with selectedDisplayMode: Int) -> Double {
+        let betrag: Double
+        switch selectedDisplayMode {
+        case 2:
+            betrag = 0.2
+        case 1:
+            betrag = 0.1
+        default:
+            betrag = 0.05
+        }
+        return betrag
+    }
+    
+    //Speichert die Aktivität im Backend ab
+    func saveActivity(_ activity: Aktivitaet, targetname:String) {
+        guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet?username=admin&password=password") else {
+            print("Invalid URL")
+            return
+        }
+
+        let newAktivitaet = Aktivitaet(id: activity.id, betrag: activity.betrag, beschreibung: activity.beschreibung, kategorie: activity.kategorie, art: activity.art, benutzer: activity.benutzer,datum: activity.datum,savingsTarget: activity.savingsTarget, anteil: calculateDisplayMode(with: selectedDisplayMode))
 
         guard let encodedActivity = try? JSONEncoder().encode(newAktivitaet) else {
             print("Failed to encode activity")

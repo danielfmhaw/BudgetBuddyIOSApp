@@ -1,40 +1,44 @@
-// Man kann hier Limits anzeigen, hinzufügen, editieren und löschen
 //
-// Created by Daniel Mendes on 30.04.23.
+//  SavingsTarget.swift
+//  BudgetBuddy
+//
+//  Created by Daniel Mendes on 08.06.23.
+//
 
 import SwiftUI
 
-// Struktur eines "Limits" (genauso wie im Backend gespeichert)
-struct Limit: Codable, Identifiable {
+// Struktur eines "SavingTarget" (genauso wie im Backend gespeichert)
+struct Target: Codable, Identifiable {
     var id: Int
-    var kategorie: String
+    var targetname: String
     var benutzer: Benutzer
-    var betrag: Double
+    var zielbetrag: Double
+    var aktbetrag: Double
 }
 
-struct LimitView: View {
+struct SavingsTarget: View {
     let email: String
     let benutzer: Benutzer
+    @State var targets: [Target] = []
 
-    @State var isPresentingAddLimitView = false
-    @State var isPresentingEditLimitView = false
-    @State var selectedLimit: Limit?
-    @State var limits: [Limit] = []
+    @State var isPresentingAddTargetView = false
+    @State var isPresentingEditTargeView = false
+    @State var selectedTarget: Target?
 
     var body: some View {
         ZStack {
             VStack{
-                Text("Limits")
+                Text("Spar-Ziele")
                     .font(.title)
                     .fontWeight(.bold)
                     .padding(.top, 20)
 
-                if !limits.isEmpty {
-                    // Anzeige alle Limits für den Benutzer
+                if !targets.isEmpty {
+                    // Anzeige alle Targets für den Benutzer
                     List {
-                        ForEach(limits, id: \.id) { limit in
+                        ForEach(targets, id: \.id) { target in
                             HStack {
-                                Text("\(limit.kategorie)")
+                                Text("\(target.targetname)")
                                     .fontWeight(.semibold)
                                     .font(.headline)
                                     .foregroundColor(.primary)
@@ -42,72 +46,71 @@ struct LimitView: View {
                                 Spacer()
 
                                 HStack {
-                                    Text("\(limit.betrag, specifier: "%.2f") €")
+                                    Text("\(target.zielbetrag, specifier: "%.2f") € (\(Int((target.aktbetrag/target.zielbetrag) * 100))%)")
                                         .foregroundColor(.green)
                                 }
                             }
                             .padding(.vertical, 10)
-                            // Löschen des ausgwählten Limits
+                            // Löschen des ausgwählten Targets
                             .contextMenu {
                                 Button(action: {
-                                    deleteLimit(id: limit.id)
+                                    deleteTarget(id: target.id)
                                 }) {
                                     Text("Löschen")
                                     Image(systemName: "trash")
                                 }
                             }
                             .onTapGesture {
-                                selectedLimit = limit
+                                selectedTarget = target
                             }
                         }
-                        // Löschen des ausgwählten Limits
+                        // Löschen des ausgwählten Targets
                         .onDelete { indexSet in
                             for index in indexSet {
-                                deleteLimit(id: limits[index].id)
+                                deleteTarget(id: targets[index].id)
                             }
                         }
                     }
-                    // Editieren des ausgwählten Limits
-                    .sheet(item: $selectedLimit) { limit in
-                        EditLimitView(email: email, benutzer: benutzer, limit: limit, onDismiss: {
-                            fetchLimits()
+                    // Editieren des ausgwählten Targets
+                    .sheet(item: $selectedTarget) { target in
+                        EditSavingsTarget(email: email, benutzer: benutzer, target: target, onDismiss: {
+                            fetchTargets()
                         })
                     }
                 } else {
-                    Text("Keine Limits gefunden")
+                    List{
+                        Text("Keine Targets gefunden")
+                    }
                 }
             }
-            // HInzufügen eines Limits mit Button an oberer rechter Seite
+            // HInzufügen eines Targets mit Button an oberer rechter Seite
             .navigationBarItems(trailing:
                 Button(action: {
-                    isPresentingAddLimitView.toggle()
+                    isPresentingAddTargetView.toggle()
                 }) {
                     Text("Hinzufügen")
                 }
-                .sheet(isPresented: $isPresentingAddLimitView) {
-                    AddLimitView(email: email, benutzer: benutzer, isPresentingAddLimitView: $isPresentingAddLimitView, onDismiss: {
-                        fetchLimits()
+                .sheet(isPresented: $isPresentingAddTargetView) {
+                    AddSavingsTarget(email: email, benutzer: benutzer, isPresentingAddTargetView: $isPresentingAddTargetView, onDismiss: {
+                        fetchTargets()
                     })
                 }
             )
-            .onAppear {
-                fetchLimits()
-            }
         }
     }
 
-    //Bekommt die Limits aus dem Backend
-    func fetchLimits() {
-        guard let url = URL(string: "http://localhost:8080/api/v1/limit/\(email)?username=admin&password=password") else {
+    //Bekommt die Targets aus dem Backend
+    func fetchTargets() {
+        guard let url = URL(string: "http://localhost:8080/api/v1/targets/\(email)?username=admin&password=password") else {
             print("Invalid URL")
             return
         }
 
         URLSession.shared.dataTask(with: url) { data, response, error in
             if let data = data {
-                if let decodedResponse = try? JSONDecoder().decode([Limit].self, from: data) {
+                if let decodedResponse = try? JSONDecoder().decode([Target].self, from: data) {
                     DispatchQueue.main.async {
-                        limits = decodedResponse
+                        targets = decodedResponse
                     }
                     return
                 }
@@ -116,9 +119,9 @@ struct LimitView: View {
         }.resume()
     }
     
-    //Löscht das Limit im Backend
-    func deleteLimit(id: Int) {
-        guard let url = URL(string: "http://localhost:8080/api/v1/limit/\(id)?username=admin&password=password") else {
+    //Löscht das Target im Backend
+    func deleteTarget(id: Int) {
+        guard let url = URL(string: "http://localhost:8080/api/v1/targets/\(id)?username=admin&password=password") else {
             print("Ungültige URL")
             return
         }
@@ -128,7 +131,7 @@ struct LimitView: View {
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let error = error {
-                print("Fehler beim Löschen des Limits: \(error.localizedDescription)")
+                print("Fehler beim Löschen des Targets: \(error.localizedDescription)")
                 return
             }
             
@@ -138,39 +141,31 @@ struct LimitView: View {
             }
             
             if httpResponse.statusCode == 200 {
-                // Aktualisiere die Limitsliste
-                fetchLimits()
+                // Aktualisiere die Targetsliste
+                fetchTargets()
             } else {
-                print("Fehler beim Löschen des Limits: HTTP-Statuscode \(httpResponse.statusCode)")
+                print("Fehler beim Löschen des Targets: HTTP-Statuscode \(httpResponse.statusCode)")
             }
         }.resume()
     }
 
 }
 
-// Screen, wo man Limit hinzufügen kann
-struct AddLimitView: View {
+// Screen, wo man Target hinzufügen kann
+struct AddSavingsTarget: View {
     let email: String
     let benutzer: Benutzer
-    let isPresentingAddLimitView: Binding<Bool>
+    let isPresentingAddTargetView: Binding<Bool>
     let onDismiss: () -> Void
     
-    let kategorien = ["Lebensmittel", "Finanzen", "Freizeit", "Unterhaltung", "Hobbys", "Wohnen", "Haushalt", "Technik", "Shopping", "Restaurant", "Drogerie", "Sonstiges"]
-    
-    @State private var selectedKategorie = "Lebensmittel"
+    @State var targetname : String = ""
     @State var betrag: String = ""
     
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Kategorie")) {
-                    Picker("Kategorie", selection: $selectedKategorie) {
-                        ForEach(kategorien, id: \.self) { kategorie in
-                            Text(kategorie)
-                        }
-                    }
-                    .pickerStyle(MenuPickerStyle())
-                    .padding(.leading, 16)
+                Section(header: Text("Name des Sparziels")) {
+                    TextField("Sparzielname", text: $targetname)
                 }
                 
                 Section(header: Text("Betrag")) {
@@ -183,10 +178,10 @@ struct AddLimitView: View {
                            .keyboardType(.decimalPad)
                 }
             }
-            .navigationBarTitle("Limit hinzufügen")
+            .navigationBarTitle("Target hinzufügen")
             .navigationBarItems(trailing: Button(action: {
-                saveLimit()
-                isPresentingAddLimitView.wrappedValue = false
+                saveTarget()
+                isPresentingAddTargetView.wrappedValue = false
             }) {
                 Text("Hinzufügen")
             })
@@ -196,12 +191,12 @@ struct AddLimitView: View {
         }
     }
     
-    // Abspeichern des neuen Limits im Backend
-    func saveLimit() {
+    // Abspeichern des neuen Targets im Backend
+    func saveTarget() {
         let betragDouble = Double(betrag)
-        let newLimit = Limit(id: 0,kategorie: selectedKategorie,benutzer: benutzer, betrag: betragDouble ?? 0)
+        let newTarget = Target(id: 0,targetname: targetname ,benutzer: benutzer, zielbetrag: betragDouble ?? 0, aktbetrag: 0)
         
-        guard let url = URL(string: "http://localhost:8080/api/v1/limit/?username=admin&password=password") else {
+        guard let url = URL(string: "http://localhost:8080/api/v1/targets/?username=admin&password=password") else {
             print("Invalid URL")
             return
         }
@@ -209,7 +204,7 @@ struct AddLimitView: View {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        guard let encodedBody = try? JSONEncoder().encode(newLimit) else {
+        guard let encodedBody = try? JSONEncoder().encode(newTarget) else {
             print("Failed to encode data")
             return
         }
@@ -217,7 +212,7 @@ struct AddLimitView: View {
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let data = data {
-                if let _ = try? JSONDecoder().decode(Limit.self, from: data) {
+                if let _ = try? JSONDecoder().decode(Target.self, from: data) {
                     DispatchQueue.main.async {
                     }
                     return
@@ -228,22 +223,27 @@ struct AddLimitView: View {
     }
 }
 
-// Screen, der geöffnet wird wenn man auf das jeweilige Limit drückt und dann kann man die Daten entsprechend verändern
-struct EditLimitView: View {
+// Screen, der geöffnet wird wenn man auf das jeweilige Target drückt und dann kann man die Daten entsprechend verändern
+struct EditSavingsTarget: View {
     let email: String
     let benutzer: Benutzer
-    let limit: Limit
+    let target: Target
     let onDismiss: () -> Void
     
     @Environment(\.presentationMode) var presentationMode
+    
+    @State var targetname : String = ""
     
     @State var betrag: String = ""
     
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Kategorie")) {
-                    Text("\(limit.kategorie)")
+                Section(header: Text("Name des Sparziels")) {
+                    TextField("Sparzielname", text: $targetname)
+                        .onAppear {
+                            targetname = target.targetname
+                        }
                 }
                 
                 Section(header: Text("Betrag")) {
@@ -255,13 +255,13 @@ struct EditLimitView: View {
                            )
                            .keyboardType(.decimalPad)
                            .onAppear {
-                               betrag = String(limit.betrag)
+                               betrag = String(target.zielbetrag)
                            }
                 }
             }
-            .navigationBarTitle("Limit bearbeiten")
+            .navigationBarTitle("Target bearbeiten")
             .navigationBarItems(trailing:  Button(action: {
-                updateLimit()
+                updateTarget()
                 presentationMode.wrappedValue.dismiss()
             }) {
                 Text("Speichern")
@@ -272,12 +272,12 @@ struct EditLimitView: View {
         }
     }
     
-    // Speichert die veränderten Limits im Backend
-    func updateLimit() {
+    // Speichert die veränderten Targets im Backend
+    func updateTarget() {
         let betragDouble = Double(betrag)
-        let updatedLimit = Limit(id: limit.id, kategorie: limit.kategorie, benutzer: benutzer, betrag: betragDouble ?? 0)
+        let updatedTarget = Target(id: target.id, targetname: targetname, benutzer: benutzer, zielbetrag: betragDouble ?? 0,aktbetrag: 0)
         
-        guard let url = URL(string: "http://localhost:8080/api/v1/limit/?username=admin&password=password") else {
+        guard let url = URL(string: "http://localhost:8080/api/v1/targets/?username=admin&password=password") else {
             print("Invalid URL")
             return
         }
@@ -285,7 +285,7 @@ struct EditLimitView: View {
         var request = URLRequest(url: url)
         request.httpMethod = "PUT"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        guard let encodedBody = try? JSONEncoder().encode(updatedLimit) else {
+        guard let encodedBody = try? JSONEncoder().encode(updatedTarget) else {
             print("Failed to encode data")
             return
         }
@@ -293,7 +293,7 @@ struct EditLimitView: View {
         
         URLSession.shared.dataTask(with: request) { data, response, error in
             if let data = data {
-                if let _ = try? JSONDecoder().decode(Limit.self, from: data) {
+                if let _ = try? JSONDecoder().decode(Target.self, from: data) {
                     DispatchQueue.main.async {
                     }
                     return
@@ -303,3 +303,4 @@ struct EditLimitView: View {
         }.resume()
     }
 }
+

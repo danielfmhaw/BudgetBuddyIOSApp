@@ -19,10 +19,10 @@ struct LimitAnalyse: Identifiable {
 
 
 struct LimitAnalyseView: View {
-    let email: String
-       @State var limits: [Limit] = []
-       @State var activities: [Aktivitaet] = []
-       @State var limitAnalysen: [LimitAnalyse] = []
+        let email: String
+        let limitAnalysen: [LimitAnalyse]
+        let limits: [Limit]
+    
        @State var showList: Bool = true
        @State private  var currentActiveItem: Item?
     
@@ -31,13 +31,13 @@ struct LimitAnalyseView: View {
        var body: some View {
            NavigationView {
                VStack {
-                   Text("Analyse View")
+                   Text("Budget-Vergleich")
                        .font(.title)
                        .fontWeight(.bold)
                        .padding(.top, 20)
 
                    Picker(selection: $showList, label: Text("Select View")) {
-                       Text("Bar Chart").tag(true)
+                       Text("Diagramm").tag(true)
                        Text("Liste").tag(false)
                    }
                    .pickerStyle(SegmentedPickerStyle())
@@ -147,25 +147,8 @@ struct LimitAnalyseView: View {
                        })
                    }
                }
-               .onAppear {
-                   fetchLimits()
-                   fetchActivities()
-               }
            }
        }
-    // Erstellt Limit-Analysen basierend auf den Limits und Aktivitäten
-    private func createLimitAnalysen() {
-        let kategorien = Set(limits.map { $0.kategorie })
-        
-        var limitAnalysen = [LimitAnalyse]()
-        for kategorie in kategorien {
-            let betragSumme = getAktivitaetenSummeInKategorie(kategorie: kategorie)
-            let limitBetrag = limits.filter { $0.kategorie == kategorie }.first?.betrag ?? 0
-            limitAnalysen.append(LimitAnalyse(kategorie: kategorie, zielbetrag: limitBetrag, aktuell: betragSumme))
-        }
-        self.limitAnalysen = limitAnalysen
-        print(limitAnalysen)
-    }
     
     // Erstellt eine Liste von Items basierend auf den Limits und Limit-Analysen
     private var items: [Item] {
@@ -183,54 +166,5 @@ struct LimitAnalyseView: View {
        let id = UUID()
        let type: String
        let value: Double
-    }
-    
-    // Summiert die Summe in der jeweiligen Kategorie auf
-    private func getAktivitaetenSummeInKategorie(kategorie: String) -> Double {
-        let aktivitaetenInKategorie = activities.filter { $0.kategorie == kategorie }
-        let betragSumme = aktivitaetenInKategorie.reduce(0) { $0 + $1.betrag }
-        return betragSumme
-    }
-
-    // Bekommt alle Limits aus dem Backend für den jeweiligen Benutzer (-email)
-    private func fetchLimits() {
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/limit/\(email)?username=admin&password=password") else {
-            print("Invalid URL")
-            return
-        }
-        
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            if let data = data {
-                if let decodedResponse = try? JSONDecoder().decode([Limit].self, from: data) {
-                    DispatchQueue.main.async {
-                        limits = decodedResponse
-                        createLimitAnalysen()
-                    }
-                    return
-                }
-            }
-            print("Fetch failed: \(error?.localizedDescription ?? "Unknown error")")
-        }.resume()
-    }
-    
-    // Bekommt alle Aktivtitäten aus dem Backend mit Art "Ausgaben"
-    private func fetchActivities() {
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/aktivitaet/withArt/\(email)/Ausgaben?username=admin&password=password") else {
-            print("Invalid URL")
-            return
-        }
-        
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            if let data = data {
-                if let decodedResponse = try? JSONDecoder().decode([Aktivitaet].self, from: data) {
-                    DispatchQueue.main.async {
-                        activities = decodedResponse
-                        createLimitAnalysen()
-                    }
-                    return
-                }
-            }
-            print("Fetch failed: \(error?.localizedDescription ?? "Unknown error")")
-        }.resume()
     }
 }

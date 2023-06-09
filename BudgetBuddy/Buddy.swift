@@ -225,7 +225,7 @@ struct Buddy: View {
 
     // Limits werden aus dem Backend für den jeweiligen Benutzer geladen
     private func fetchLimits() {
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/limit/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "http://localhost:8080/api/v1/limit/\(email)?username=admin&password=password") else {
             print("Invalid URL")
             return
         }
@@ -246,7 +246,7 @@ struct Buddy: View {
     
     // Alle Aktivitäten werden aus dem Backend für den jeweiligen Nutzer geladen
     private func fetchActivities() {
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/aktivitaet/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/\(email)?username=admin&password=password") else {
             print("Invalid URL")
             return
         }

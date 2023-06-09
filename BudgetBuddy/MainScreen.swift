@@ -38,6 +38,19 @@ struct LoggedInView: View {
 
     @State private var soriertenEinnahmen: SoriertenEinnahmen = .descending
     @State private var soriertenAusgaben: SoriertenAusgaben = .descending
+    
+    @State var limits: [Limit] = []
+    @State var limitAnalysen: [LimitAnalyse] = []
+    
+    @State private var gesamtEinnahmen: Double = 0.0
+    @State private var gesamtAusgaben: Double = 0.0
+    
+    @State var targets: [Target] = []
+    
+    @Environment(\.colorScheme) var colorScheme
+    
+    @State private var aktivitaetenSummen: [Double] = []
+    @State private var selectedInterval = "Woche"
 
 
     var body: some View {
@@ -45,101 +58,295 @@ struct LoggedInView: View {
             
             //NavigationView für die "Übersicht" (dort sieht man Kontostand und kann Einnahmen/Ausgaben summiert sehen)
             NavigationView{
-                VStack {
-                    
-                    
-                    VStack{
-                        Text("Kontostand:")
-                            .font(.headline)
-                            .foregroundColor(.secondary)
+                ScrollView{
+                    VStack {
+                        VStack{
+                            Text("Kontostand:")
+                                .font(.headline)
+                                .foregroundColor(.secondary)
+                            
+                            Text("\(user?.kontostand ?? 0.0, specifier: "%.2f") €")
+                                .font(.largeTitle)
+                                .fontWeight(.bold)
+                                .foregroundColor(user?.kontostand ?? 0.0 >= 0 ? .green : .red)
+                        }.padding()
                         
-                        Text("\(user?.kontostand ?? 0.0, specifier: "%.2f") €")
-                            .font(.largeTitle)
-                            .fontWeight(.bold)
-                            .foregroundColor(user?.kontostand ?? 0.0 >= 0 ? .green : .red)
-                    }.padding()
-                    
-                    
-                    VStack(alignment: .leading) {
-                        NavigationLink(destination: Kreisdiagramm( art: "Einnahmen", email: email)){
-                            HStack {
-                                Image(systemName: "eurosign.circle.fill")
-                                    .resizable()
-                                    .frame(width: 24, height: 24)
-                                    .foregroundColor(.blue)
-                                Text("Einnahmenüberblick")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                    .padding(.leading, 8)
-                            }
-                        }
-                        Divider()
-                        HStack {
-                            NavigationLink(destination: Kreisdiagramm( art: "Ausgaben", email: email)){
-                                Image(systemName: "dollarsign.circle.fill")
-                                    .resizable()
-                                    .frame(width: 24, height: 24)
-                                    .foregroundColor(.blue)
-                                Text("Ausgabenüberblick")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                    .padding(.leading, 8)
-                            }
-                        }
-                        Divider()
-                        HStack {
-                            NavigationLink(destination: AnaylseView(email: email)) {
-                                Image(systemName: "chart.bar.fill")
-                                    .resizable()
-                                    .frame(width: 24, height: 24)
-                                    .foregroundColor(.blue)
-                                Text("Zeitverlauf")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                    .padding(.leading, 8)
-                            }
-                        }
-                        Divider()
-                        HStack {
-                            if let user = user {
-                                NavigationLink(destination: LimitView(email: email, benutzer: user)) {
-                                    Image(systemName: "exclamationmark.triangle.fill")
-                                        .resizable()
-                                        .frame(width: 24, height: 24)
-                                        .foregroundColor(.blue)
-                                    Text("Limits")
-                                        .font(.headline)
-                                        .foregroundColor(.primary)
-                                        .padding(.leading, 8)
+                        
+                        VStack(alignment: .leading) {
+                            NavigationLink(destination: Kreisdiagramm(art: "Einnahmen", email: email)) {
+                                VStack(alignment: .leading) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "eurosign.circle.fill")
+                                            .resizable()
+                                            .frame(width: 24, height: 24)
+                                            .foregroundColor(.blue)
+                                        
+                                        Text("Einnahmenüberblick")
+                                            .font(.headline)
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                    }
+                                    
+                                    if !aktivitaetenSummen.isEmpty {
+                                        HStack {
+                                            Text("Letzte 12 Monate:")
+                                                .font(.subheadline)
+                                                .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
+                                            
+                                            Text("\(String(format: "%.2f", aktivitaetenSummen[0])) €")
+                                                .foregroundColor(.green)
+                                                .font(.subheadline)
+                                            Spacer()
+                                        }
+                                    }
+                                    HStack {
+                                        Text("Gesamteinnahmen:")
+                                            .font(.subheadline)
+                                            .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
+                                        
+                                        Text("\(String(format: "%.2f", gesamtEinnahmen)) €")
+                                            .foregroundColor(.green)
+                                            .font(.subheadline)
+                                        Spacer()
+                                    }
                                 }
-                            } else {
+                                .padding()
+                                .background(colorScheme == .light ? Color.white : Color.black)
+                                .cornerRadius(10)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .strokeBorder(Color.gray, lineWidth: colorScheme == .dark ? 0.5 : 0)
+                                )
+                                .shadow(color: .gray, radius: 1, x: 0, y: 1)
+                            }
+                            NavigationLink(destination: Kreisdiagramm(art: "Ausgaben", email: email)) {
+                                VStack(alignment: .leading) {
+                                    HStack(spacing: 8) {
+                                        Image(systemName: "eurosign.square.fill")
+                                            .resizable()
+                                            .frame(width: 24, height: 24)
+                                            .foregroundColor(.blue)
+                                        
+                                        Text("Ausgabenüberblick")
+                                            .font(.headline)
+                                            .foregroundColor(.primary)
+                                        Spacer()
+                                    }
+                                    
+                                    if !aktivitaetenSummen.isEmpty {
+                                        HStack {
+                                            Text("Letzte 12 Monate:")
+                                                .font(.subheadline)
+                                                .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
+                                            
+                                            Text("\(String(format: "%.2f", aktivitaetenSummen[3])) €")
+                                                .foregroundColor(.green)
+                                                .font(.subheadline)
+                                            Spacer()
+                                        }
+                                    }
+                                    HStack {
+                                        Text("Gesamtausgaben:")
+                                            .font(.subheadline)
+                                            .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
+                                        
+                                        Text("\(String(format: "%.2f", gesamtAusgaben)) €")
+                                            .foregroundColor(.green)
+                                            .font(.subheadline)
+                                        Spacer()
+                                    }
+                                }
+                                .padding()
+                                .background(colorScheme == .light ? Color.white : Color.black)
+                                .cornerRadius(10)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .strokeBorder(Color.gray, lineWidth: colorScheme == .dark ? 0.5 : 0)
+                                )
+                                .shadow(color: .gray, radius: 2, x: 0, y: 2)
+                            }
+                            
+                            VStack{
+                                NavigationLink(destination: AnalyseView(email: email)) {
+                                    VStack(alignment: .leading) {
+                                        HStack(spacing: 8) {
+                                            Image(systemName: "chart.bar.fill")
+                                                .resizable()
+                                                .frame(width: 24, height: 24)
+                                                .foregroundColor(.blue)
+                                            
+                                            Text("Trends")
+                                                .font(.headline)
+                                                .foregroundColor(.primary)
+                                            Spacer()
+                                            Image(systemName: "chevron.right")
+                                                .foregroundColor(.primary)
+                                                .padding(.trailing, 8)
+                                        }
+                                    }}
+                                if !aktivitaetenSummen.isEmpty {
+                                    Picker("Intervall", selection: $selectedInterval) {
+                                        Text("Woche").tag("Woche")
+                                        Text("Monat").tag("Monat")
+                                        Text("Jahr").tag("Jahr")
+                                    }
+                                    .pickerStyle(SegmentedPickerStyle())
+                                    
+                                    switch selectedInterval {
+                                    case "Jahr":
+                                        getComparisonText(value: aktivitaetenSummen[2] * 100, isIncome: true)
+                                        getComparisonText(value: aktivitaetenSummen[5] * 100, isIncome: false)
+                                    case "Monat":
+                                        getComparisonText(value: aktivitaetenSummen[8] * 100, isIncome: true)
+                                        getComparisonText(value: aktivitaetenSummen[11] * 100, isIncome: false)
+                                    case "Woche":
+                                        getComparisonText(value: aktivitaetenSummen[14] * 100, isIncome: true)
+                                        getComparisonText(value: aktivitaetenSummen[17] * 100, isIncome: false)
+                                    default:
+                                        Text("Keine Daten")
+                                    }
+                                }
+                            }
+                            .padding()
+                            .background(colorScheme == .light ? Color.white : Color.black)
+                            .cornerRadius(10)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .strokeBorder(Color.gray, lineWidth: colorScheme == .dark ? 0.5 : 0)
+                            )
+                            .shadow(color: .gray, radius: 2, x: 0, y: 2)
+                            VStack(alignment: .leading){
+                                NavigationLink(destination: LimitAnalyseView(email: email, limitAnalysen: limitAnalysen, limits: limits)) {
+                                    HStack {
+                                        Image(systemName: "chart.bar.doc.horizontal.fill")
+                                            .resizable()
+                                            .frame(width: 24, height: 24)
+                                            .foregroundColor(.blue)
+                                        Text("Budgets")
+                                            .font(.headline)
+                                            .foregroundColor(.primary)
+                                            .padding(.leading, 8)
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .foregroundColor(.primary)
+                                            .padding(.trailing, 8)
+                                    }
+                                }
+                                Divider()
+                                HStack {
+                                    NavigationLink(destination: LimitAnalyseView(email: email, limitAnalysen: limitAnalysen, limits: limits)) {
+                                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())],spacing: 8) {
+                                            ForEach(limits, id: \.id) { limit in
+                                                if let limitAnalyse = limitAnalysen.first(where: { $0.kategorie == limit.kategorie }) {
+                                                    ZStack {
+                                                        Circle()
+                                                            .foregroundColor(Color.cyan)
+                                                            .frame(width: 50, height: 50)
+                                                        Circle()
+                                                            .trim(from: 0, to: CGFloat(limitAnalyse.aktuell / limit.betrag))
+                                                            .stroke(limitAnalyse.ueberschuss >= 0 ? Color.green : Color.red, lineWidth: 5)
+                                                            .frame(width: 50, height: 50)
+                                                            .rotationEffect(.degrees(-90))
+                                                        VStack {
+                                                            Image(systemName: categoryIcon(for: limit.kategorie))
+                                                                .resizable()
+                                                                .frame(width: 20, height: 20)
+                                                                .foregroundColor(.white)
+                                                        }
+                                                    }
+                                                    .padding(4)
+                                                }
+                                            }
+                                            if let user = user {
+                                                NavigationLink(destination: LimitView(email: email, benutzer: user)) {
+                                                    ZStack {
+                                                        Circle()
+                                                            .foregroundColor(Color.red)
+                                                            .frame(width: 50, height: 50)
+                                                        Image(systemName: "plus")
+                                                            .resizable()
+                                                            .frame(width: 20, height: 20)
+                                                            .foregroundColor(.white)
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            .padding()
+                            .background(colorScheme == .light ? Color.white : Color.black)
+                            .cornerRadius(10)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .strokeBorder(Color.gray, lineWidth: colorScheme == .dark ? 0.5 : 0)
+                            )
+                            .shadow(color: .gray, radius: 2, x: 0, y: 2)
+                            if let user = user {
+                                VStack{
+                                    NavigationLink(destination: SavingsTarget(email: email, benutzer: user, targets: targets)) {
+                                        VStack(alignment: .leading) {
+                                            HStack(spacing: 8) {
+                                                Image(systemName: "flag.fill")
+                                                    .resizable()
+                                                    .frame(width: 24, height: 24)
+                                                    .foregroundColor(.blue)
+                                                
+                                                Text("Spar Ziel")
+                                                    .font(.headline)
+                                                    .foregroundColor(.primary)
+                                                Spacer()
+                                                Image(systemName: "chevron.right")
+                                                    .foregroundColor(.primary)
+                                                    .padding(.trailing, 8)
+                                            }
+                                            Divider()
+                                            ForEach(targets, id: \.id) { target in
+                                                HStack {
+                                                    Text("\(target.targetname)")
+                                                        .fontWeight(.semibold)
+                                                        .font(.headline)
+                                                        .foregroundColor(.primary)
+                                                    
+                                                    Spacer()
+                                                    
+                                                    HStack {
+                                                        Text("\(target.zielbetrag, specifier: "%.2f") € (\(Int((target.aktbetrag/target.zielbetrag) * 100))%)")
+                                                            .foregroundColor(.green)
+                                                    }
+                                                }
+                                                .padding(.vertical, 10)
+                                            }
+                                        }
+                                        .padding()
+                                        .background(colorScheme == .light ? Color.white : Color.black)
+                                        .cornerRadius(10)
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 10)
+                                                //.strokeBorder(colorScheme == .dark ? Color.white : Color.gray, lineWidth: colorScheme == .dark ? 1 : 0)
+                                                .strokeBorder(Color.gray, lineWidth: colorScheme == .dark ? 0.5 : 0)
+                                        )
+                                        .shadow(color: .gray, radius: 2, x: 0, y: 2)
+                                    }
+                                }
+                            }else {
                                 Text("User is nil")
                             }
+                            Spacer()
                         }
-                        Divider()
-                        HStack {
-                            NavigationLink(destination: LimitAnalyseView(email: email)) {
-                                Image(systemName: "chart.bar.doc.horizontal.fill")
-                                    .resizable()
-                                    .frame(width: 24, height: 24)
-                                    .foregroundColor(.blue)
-                                Text("Limit Anaylse")
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
-                                    .padding(.leading, 8)
-                            }
-                        }
-                        Spacer()
-                    }
-                    .padding()
-                    .navigationBarTitle(Text("Übersicht"), displayMode: .inline)
-
+                        .padding()
+                        .navigationBarTitle(Text("Übersicht"), displayMode: .inline)
+                        
                     }
                     .onAppear {
-                           getBenutzer()
+                        getAktivitaeten(name:"Beides")
+                        fetchLimits()
+                        getBenutzer()
+                        fetchTargets()
                     }
                     .navigationBarTitle(Text("Übersicht"), displayMode: .inline)
                 }
+            }
             .tabItem{
                 Image(systemName: "chart.bar.fill")
                 Text("Übersicht")
@@ -367,6 +574,17 @@ struct LoggedInView: View {
             //NavigationView für die "Einstellungen" (aktuell wird nur zu BenutzerView verlinkt und es gibt einen deafault: "allgemein" und den Chat)
             NavigationView {
                 VStack(alignment: .leading) {
+                    HStack {
+                        Image(systemName: "gear")
+                            .resizable()
+                            .frame(width: 24, height: 24)
+                            .foregroundColor(.blue)
+                        Text("Einstellungen")
+                            .font(.headline)
+                            .foregroundColor(.primary)
+                            .padding(.leading, 8)
+                    }
+                    Divider()
                     NavigationLink(destination: BenutzerView(email: email))
                     {
                         HStack {
@@ -379,17 +597,6 @@ struct LoggedInView: View {
                                 .foregroundColor(.primary)
                                 .padding(.leading, 8)
                         }
-                    }
-                    Divider()
-                    HStack {
-                        Image(systemName: "gear")
-                            .resizable()
-                            .frame(width: 24, height: 24)
-                            .foregroundColor(.blue)
-                        Text("Allgemein")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                            .padding(.leading, 8)
                     }
                     Divider()
                     NavigationLink(destination: Buddy(email: email)) {
@@ -408,7 +615,7 @@ struct LoggedInView: View {
                     Spacer()
                 }
                 .padding()
-                .navigationBarTitle(Text("Einstellungen"), displayMode: .inline)
+                .navigationBarTitle(Text("Mehr"), displayMode: .inline)
                 .navigationBarItems(trailing:
                     Button(action: {
                         self.logoutAction()
@@ -424,8 +631,8 @@ struct LoggedInView: View {
                 )
             }
             .tabItem {
-                Image(systemName: "gearshape.fill")
-                Text("Einstellungen")
+                Image(systemName: "ellipsis.circle.fill")
+                Text("Mehr")
             }
 
                
@@ -434,7 +641,7 @@ struct LoggedInView: View {
     
     //Löscht die Aktivität im Backend
     func deleteAktivitaet(id: Int,art:String) {
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/aktivitaet/\(id)?username=admin&password=password") else {
+        guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/\(id)?username=admin&password=password") else {
             print("Ungültige URL")
             return
         }
@@ -464,7 +671,7 @@ struct LoggedInView: View {
 
     //Bekommt die Benutzerdaten aus dem Backend
     func getBenutzer() {
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/benutzer/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "http://localhost:8080/api/v1/benutzer/\(email)?username=admin&password=password") else {
             return
         }
         
@@ -486,12 +693,20 @@ struct LoggedInView: View {
     
     //Bekommt die Aktivitäten aus dem Backend
     func getAktivitaeten(name:String) {
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/aktivitaet/withArt/\(email)/\(name)?username=admin&password=password") else {
+        var url: URL?
+
+        if name == "Beides" {
+            url = URL(string: "http://localhost:8080/api/v1/aktivitaet/\(email)?username=admin&password=password")
+        } else {
+            url = URL(string: "http://localhost:8080/api/v1/aktivitaet/withArt/\(email)/\(name)?username=admin&password=password")
+        }
+
+        guard let requestURL = url else {
             print("Invalid URL")
             return
         }
 
-        URLSession.shared.dataTask(with: url) { data, response, error in
+        URLSession.shared.dataTask(with: requestURL) { data, response, error in
             guard let data = data, error == nil else {
                 print("Error: \(error?.localizedDescription ?? "Unknown error")")
                 return
@@ -500,10 +715,209 @@ struct LoggedInView: View {
             if let decodedResponse = try? JSONDecoder().decode([Aktivitaet].self, from: data) {
                 DispatchQueue.main.async {
                     self.aktivitaeten = decodedResponse
+                    if(name=="Beides"){
+                        gesamtEinnahmen = summeGesamtNachArt(art:"Einnahmen")
+                        gesamtAusgaben = summeGesamtNachArt(art:"Ausgaben")
+                    }
+                    aktivitaetenSummen.append(contentsOf: getYearSum(art: "Einnahmen", aktivitaeten: aktivitaeten))
+                    aktivitaetenSummen.append(contentsOf: getYearSum(art: "Ausgaben", aktivitaeten: aktivitaeten))
+                    aktivitaetenSummen.append(contentsOf: getMonthSum(art: "Einnahmen", aktivitaeten: aktivitaeten))
+                    aktivitaetenSummen.append(contentsOf: getMonthSum(art: "Ausgaben", aktivitaeten: aktivitaeten))
+                    aktivitaetenSummen.append(contentsOf: getWeekSum(art: "Einnahmen", aktivitaeten: aktivitaeten))
+                    aktivitaetenSummen.append(contentsOf: getWeekSum(art: "Ausgaben", aktivitaeten: aktivitaeten))
                 }
             } else {
                 print("Invalid response from server")
             }
         }.resume()
     }
+    
+    // Bekommt alle Limits aus dem Backend für den jeweiligen Benutzer (-email)
+    private func fetchLimits() {
+        guard let url = URL(string: "http://localhost:8080/api/v1/limit/\(email)?username=admin&password=password") else {
+            print("Invalid URL")
+            return
+        }
+        
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let data = data {
+                if let decodedResponse = try? JSONDecoder().decode([Limit].self, from: data) {
+                    DispatchQueue.main.async {
+                        limits = decodedResponse
+                        createLimitAnalysen()
+                    }
+                    return
+                }
+            }
+            print("Fetch failed: \(error?.localizedDescription ?? "Unknown error")")
+        }.resume()
+    }
+    
+    // Erstellt Limit-Analysen basierend auf den Limits und Aktivitäten
+    private func createLimitAnalysen() {
+        let kategorien = Set(limits.map { $0.kategorie })
+        
+        var limitAnalysen = [LimitAnalyse]()
+        for kategorie in kategorien {
+            let betragSumme = getAktivitaetenSummeInKategorie(kategorie: kategorie)
+            let limitBetrag = limits.filter { $0.kategorie == kategorie }.first?.betrag ?? 0
+            limitAnalysen.append(LimitAnalyse(kategorie: kategorie, zielbetrag: limitBetrag, aktuell: betragSumme))
+        }
+        self.limitAnalysen = limitAnalysen
+        print(limitAnalysen)
+    }
+    
+    // Summiert die Summe in der jeweiligen Kategorie auf
+    private func getAktivitaetenSummeInKategorie(kategorie: String) -> Double {
+        let aktivitaetenInKategorie = aktivitaeten.filter { $0.kategorie == kategorie && $0.art == "Ausgaben"}
+        let betragSumme = aktivitaetenInKategorie.reduce(0) { $0 + $1.betrag }
+        return betragSumme
+    }
+    
+    // Die categoryIcon Methode, um das Symbol für eine Kategorie zurückzugeben
+    func categoryIcon(for category: String) -> String {
+        switch category {
+        case "Drogerie":
+            return "cart"
+        case "Freizeit":
+            return "bicycle"
+        case "Unterhaltung":
+            return "gamecontroller"
+        case "Lebensmittel":
+            return "cart.fill"
+        case "Hobbys":
+            return "paintbrush"
+        case "Wohnen":
+            return "house"
+        case "Haushalt":
+            return "house.fill"
+        case "Sonstiges":
+            return "ellipsis.circle"
+        case "Technik":
+            return "desktopcomputer"
+        case "Finanzen":
+            return "dollarsign.circle"
+        case "Restaurant":
+            return "food"
+        case "Shopping":
+            return "bag"
+        default:
+            return "circle"
+        }
+    }
+    
+    func summeGesamtNachArt(art: String) -> Double {
+        let summeEinnahmen = aktivitaeten.reduce(0) { result, aktivitaet in
+            return aktivitaet.art == art ? result + aktivitaet.betrag : result
+        }
+        return summeEinnahmen
+    }
+    
+    //Bekommt die Targets aus dem Backend
+    func fetchTargets() {
+        guard let url = URL(string: "http://localhost:8080/api/v1/targets/\(email)?username=admin&password=password") else {
+            print("Invalid URL")
+            return
+        }
+
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let data = data {
+                if let decodedResponse = try? JSONDecoder().decode([Target].self, from: data) {
+                    DispatchQueue.main.async {
+                        targets = decodedResponse
+                    }
+                    return
+                }
+            }
+            print("Fetch failed: \(error?.localizedDescription ?? "Unknown error")")
+        }.resume()
+    }
+    
+    func getComparisonText( value: Double, isIncome: Bool) -> some View {
+        let formattedValue = String(format: "%.2f", value)
+        
+        return HStack{
+            if(isIncome){
+                Text("Einnahmen: \(formattedValue)%")
+                    .foregroundColor(.green)
+            }else{
+                Text("Ausgaben: \(formattedValue)%")
+                    .foregroundColor(.red)
+            }
+            Spacer()
+            getArrowView(for: value)
+        }
+    }
+    
+    func getArrowView(for value: Double) -> some View {
+        if value > 120 {
+            return AnyView(Image(systemName: "arrow.up.right")
+                .foregroundColor(.green))
+        } else if value >= 80 && value <= 120 {
+            return AnyView(Image(systemName: "arrow.right")
+                .foregroundColor(.white))
+        } else {
+            return AnyView(Image(systemName: "arrow.down.right")
+                .foregroundColor(.red))
+        }
+    }
+
+    
+    func getYearSum(art: String, aktivitaeten: [Aktivitaet]) -> [Double] {
+        let analyseView = AnalyseView(email: email)
+        let last12activityMonths = analyseView.getXActivityMonths(art: art, aktivitaeten: aktivitaeten, anzahl: 12)
+        let last12 = last12activityMonths.reduce(0) { result, activity in
+            return result + activity.amount
+        }
+        let last24activityMonths = analyseView.getXActivityMonths(art: art, aktivitaeten: aktivitaeten, anzahl: 24)
+        let last24 = last24activityMonths.reduce(0) { result, activity in
+            return result + activity.amount
+        }
+        
+        let diff: Double
+        if ((last24 - last12) != 0 ){
+            diff = last12 / (last24 - last12)
+        } else {
+            diff = 1000
+        }
+        
+        return [last12,(last24-last12),diff]
+    }
+    func getMonthSum(art: String, aktivitaeten: [Aktivitaet]) -> [Double] {
+        let analyseView = AnalyseView(email: email)
+        let lastactivityMonths = analyseView.getXActivityMonths(art: art, aktivitaeten: aktivitaeten, anzahl: 1)
+        let last = lastactivityMonths.reduce(0) { result, activity in
+            return result + activity.amount
+        }
+        let lastactivityMonths_2nd = analyseView.getXActivityMonths(art: art, aktivitaeten: aktivitaeten, anzahl: 2)
+        let last2 = lastactivityMonths_2nd.reduce(0) { result, activity in
+            return result + activity.amount
+        }
+        let diff: Double
+        if ((last2 - last) != 0 ){
+            diff = last / (last2 - last)
+        } else {
+            diff = 1000
+        }
+        return [last,(last2-last),diff]
+    }
+    func getWeekSum(art: String, aktivitaeten: [Aktivitaet]) -> [Double] {
+        let analyseView = AnalyseView(email: email)
+        let activitieslast7 = analyseView.getActivityLastXDays(art: art, aktivitaeten: aktivitaeten, anzahl: 7)
+        let last7 = activitieslast7.reduce(0) { result, activity in
+            return result + activity.amount
+        }
+        let activitieslast14 = analyseView.getActivityLastXDays(art: art, aktivitaeten: aktivitaeten, anzahl: 14)
+        let last14 = activitieslast14.reduce(0) { result, activity in
+            return result + activity.amount
+        }
+        let diff: Double
+        if ((last14 - last7) != 0 ){
+            diff = last7 / (last14 - last7)
+        } else {
+            diff = 1000
+        }
+        return [last7,(last14-last7),diff]
+    }
 }
+

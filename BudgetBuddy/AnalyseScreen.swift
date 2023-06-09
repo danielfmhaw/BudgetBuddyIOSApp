@@ -12,7 +12,7 @@ struct Activity: Identifiable, Codable {
 }
 
 // Hier werden die verschiedenen Graphen (BarChart oder LineChart) für unterschiedliche Zeiträume angezeigt
-struct AnaylseView: View {
+struct AnalyseView: View {
     let email: String
     
     let dispatchGroup = DispatchGroup()
@@ -46,7 +46,52 @@ struct AnaylseView: View {
             
             
             if aktivitaeten.isEmpty {
-                Text("Lade Daten...")
+                //Text("Lade Daten...")
+                let chartData = getChartData()
+                let einnahmen = chartData.0
+                let ausgaben = chartData.1
+                
+                VStack{
+                    Text("Einnahmen")
+                        .font(.system(size: 18, weight: .bold))
+                    
+                    Chart(einnahmen) { activity in
+                        if isLineGraph {
+                            LineMark(
+                                x: .value("Jahr", activity.date),
+                                y: .value("Summe", activity.amount)
+                            )
+                            .foregroundStyle(Color.green.gradient)
+                        } else {
+                            BarMark(
+                                x: .value("Jahr", activity.date),
+                                y: .value("Summe", activity.amount)
+                            )
+                            .foregroundStyle(Color.green.gradient)
+                        }
+                    }
+                    Text("Ausgaben")
+                        .font(.system(size: 18, weight: .bold))
+                    
+                    Chart(ausgaben) { activity in
+                        if !isLineGraph {
+                            BarMark(
+                                x: .value("Jahr", activity.date),
+                                y: .value("Summe", activity.amount)
+                            )
+                            .foregroundStyle(Color.red.gradient)
+                        } else {
+                            LineMark(
+                                x: .value("Jahr", activity.date),
+                                y: .value("Summe", activity.amount)
+                            )
+                            .foregroundStyle(Color.red.gradient)
+                        }
+                    }
+                    Toggle("Liniendiagramm",isOn: $isLineGraph)
+                        .padding()
+
+                }
             } else {
                 let chartData = getChartData()
                 let einnahmen = chartData.0
@@ -94,8 +139,12 @@ struct AnaylseView: View {
                                     }
                                     //Rahmen
                                     .overlay(
-                                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                            .stroke(colorScheme == .light ? Color.black : Color.white, lineWidth: 1)
+                                        Group {
+                                            if colorScheme == .dark {
+                                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                                    .stroke(Color.white, lineWidth: 1)
+                                            }
+                                        }
                                     )
                                 }
                         }
@@ -155,21 +204,25 @@ struct AnaylseView: View {
                                             .font(.caption)
                                             .foregroundColor(.gray)
                                         
-                                        if colorScheme == .light{
-                                            Text("Ausgaben: \(String(format: "%.1f", currentActiveItemCost.amount))")
-                                                .font(.system(size: 14, weight: .bold))
-                                        }else{
-                                            Text("Ausgaben: \(String(format: "%.1f", currentActiveItemCost.amount))")
-                                                .font(.system(size: 14, weight: .bold))
-                                                .foregroundColor(.black)
-                                        }
+                                        Text("Ausgaben: \(String(format: "%.1f", currentActiveItemCost.amount))")
+                                            .font(.system(size: 14, weight: .bold))
                                     }
                                     .padding(.horizontal,10)
                                     .padding(.vertical,4)
                                     .background{
                                         RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                            .fill(.white.shadow(.drop(radius:2)))
+                                            .fill(colorScheme == .light ? Color.white : Color.black)
+                                            .shadow(color: colorScheme == .light ? Color.black.opacity(0.2) : Color.clear, radius: 2)
                                     }
+                                    //Rahmen
+                                    .overlay(
+                                        Group {
+                                            if colorScheme == .dark {
+                                                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                                    .stroke(Color.white, lineWidth: 1)
+                                            }
+                                        }
+                                    )
                                 }
                         }
                     }
@@ -219,11 +272,11 @@ struct AnaylseView: View {
             einnahmen = getActivityYears(art: "Einnahmen", aktivitaeten: aktivitaeten)
             ausgaben = getActivityYears(art: "Ausgaben", aktivitaeten: aktivitaeten)
         } else if selectedDisplayMode == 1 {
-            einnahmen = getActivityMonths(art: "Einnahmen", aktivitaeten: aktivitaeten)
-            ausgaben = getActivityMonths(art: "Ausgaben", aktivitaeten: aktivitaeten)
+            einnahmen = getXActivityMonths(art: "Einnahmen", aktivitaeten: aktivitaeten,anzahl: 12)
+            ausgaben = getXActivityMonths(art: "Ausgaben", aktivitaeten: aktivitaeten,anzahl: 12)
         }else if selectedDisplayMode==2{
-            einnahmen = getActivityLast14Days(art: "Einnahmen", aktivitaeten: aktivitaeten)
-            ausgaben = getActivityLast14Days(art: "Ausgaben", aktivitaeten: aktivitaeten)
+            einnahmen = getActivityLastXDays(art: "Einnahmen", aktivitaeten: aktivitaeten, anzahl: 14)
+            ausgaben = getActivityLastXDays(art: "Ausgaben", aktivitaeten: aktivitaeten, anzahl: 14)
         }
 
         return (einnahmen, ausgaben)
@@ -249,11 +302,11 @@ struct AnaylseView: View {
         return activityYears
     }
 
-    // Liefert eine Liste von der letzten 12 Aktivitätsmonaten zurück, basierend auf der Art der Aktivität und einer Liste von Aktivitäten
-    func getActivityMonths(art: String, aktivitaeten: [Aktivitaet]) -> [Activity] {
+    // Liefert eine Liste von der letzten X Aktivitätsmonaten zurück, basierend auf der Art der Aktivität und einer Liste von Aktivitäten
+    func getXActivityMonths(art: String, aktivitaeten: [Aktivitaet],anzahl:Int) -> [Activity] {
         var activityMonths: [Activity] = []
         let monthGroups = Dictionary(grouping: aktivitaeten, by: { getMonth(from: $0.datum) })
-        let lastTwelveMonths = getLastTwelveMonths()
+        let lastTwelveMonths = getXMonths(anzahl: anzahl)
         
         for month in lastTwelveMonths {
             let monthString = month.prefix(3) + String(month.suffix(2))
@@ -272,23 +325,23 @@ struct AnaylseView: View {
     }
     
     // Liefert eine Liste von 14 Aktivitätstagen zurück, basierend auf der Art der Aktivität und einer Liste von Aktivitäten
-    func getActivityLast14Days(art: String, aktivitaeten: [Aktivitaet]) -> [Activity] {
+    func getActivityLastXDays(art: String, aktivitaeten: [Aktivitaet],anzahl:Int) -> [Activity] {
         var activityDays: [Activity] = []
         let dayGroups = Dictionary(grouping: aktivitaeten, by: { getDay(from: $0.datum) })
         
-        let startDate = Calendar.current.date(byAdding: .day, value: -13, to: Date())!
+        let startDate = Calendar.current.date(byAdding: .day, value: -(anzahl+1), to: Date())!
         let endDate = Date()
 
-        var last14Days: [String] = []
+        var lastXDays: [String] = []
         var currentDate = startDate
 
         while currentDate <= endDate {
             let dayString = getDayDescription(from: currentDate)
-            last14Days.append(dayString)
+            lastXDays.append(dayString)
             currentDate = Calendar.current.date(byAdding: .day, value: 1, to: currentDate)!
         }
 
-        for day in last14Days {
+        for day in lastXDays {
             let sum = dayGroups[day]?.reduce(0) { (result, activity) in
                 if activity.art == art {
                     return result + activity.betrag
@@ -304,13 +357,13 @@ struct AnaylseView: View {
     }
 
 
-    // Gibt ein Array von Monatsstrings für die letzten 12 Monate zurück.
-    func getLastTwelveMonths() -> [String] {
+    // Gibt ein Array von Monatsstrings für die letzten X Monate zurück.
+    func getXMonths(anzahl:Int) -> [String] {
         var months: [String] = []
         let calendar = Calendar.current
         let currentDate = Date()
         var dateComponents = DateComponents()
-        for i in 0..<12 {
+        for i in 0..<anzahl {
             dateComponents.month = -i
             let monthDate = calendar.date(byAdding: dateComponents, to: currentDate)!
             let monthString = getMonthDescription(from: monthDate)
@@ -367,7 +420,7 @@ struct AnaylseView: View {
     
     //Bekommt die Einnahmen oder Ausgaben (Entscheidung über art:String) von einem Benutzer (email) zu einer möglichen Kategorie
     func getAktivitaeten() {
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/aktivitaet/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/\(email)?username=admin&password=password") else {
             print("Invalid URL")
             return
         }

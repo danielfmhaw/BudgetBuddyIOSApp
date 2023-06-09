@@ -6,7 +6,7 @@ import SwiftUI
 
 // Bekommt kategorien, email, art aus der KreisdiagrammView
 struct EinnahmenView: View {
-    var kategorien: [Kategorie] 
+    var kategorien: [Kategorie]
     let email: String
     let art: String
     

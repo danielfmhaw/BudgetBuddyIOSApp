@@ -143,7 +143,7 @@ struct RegistrationView: View {
             let jsonString = String(data: jsonData, encoding: .utf8)!
             print(jsonString)
             
-            guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/benutzer/register?username=admin&password=password") else {
+            guard let url = URL(string: "http://localhost:8080/api/v1/benutzer/register?username=admin&password=password") else {
                 print("Error: cannot create URL")
                 return
             }
