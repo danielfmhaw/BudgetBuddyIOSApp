@@ -23,7 +23,7 @@ struct Kreisdiagramm: View {
     }
     
     // Farben der "Stücke"
-    let farbenListe: [Color] = [.red, .green, .blue, .orange, .yellow, .pink, .purple, Color.pink.opacity(0.8) , .teal, .indigo, .mint, .cyan]
+    let farbenListe: [Color] = [.red, .green, .blue, .orange, .yellow, .pink, .purple,.cyan, .teal, .indigo, .mint]
 
     @State private var showEinnahmenView = false
     
@@ -149,17 +149,30 @@ struct Kreisdiagramm: View {
         return totalEinnahmen
     }
     
-    // Geht alle Aktivtitäten durch und wenn die Einnahmen,bzw. Ausgaben > 0 sind i.d. jeweiligen Kategorie wird diese später im Diagramm angezeigt
+    // Geht alle Aktivitäten durch und speichert Kategorien mit einem Anteil von weniger als 5% als "Andere"
     private func createPieChart() -> ([String], [Double]) {
         var kategorienListe = [String]()
         var einnahmenListe = [Double]()
+        var andereEinnahmen: Double = 0.0
+        let sum = kategorien.first { $0.id == "Gesamt" }?.einnahmen ?? 0.0
+
         
-        for kategorie in kategorieOhneGesamt {
-            if kategorie.einnahmen > 0 {
+        for (index, kategorie) in kategorieOhneGesamt.enumerated() {
+            let anteil = kategorie.einnahmen / sum
+            
+            if anteil >= 0.1 {
                 kategorienListe.append(kategorie.id)
                 einnahmenListe.append(kategorie.einnahmen)
+            } else {
+                andereEinnahmen += kategorie.einnahmen
+            }
+            
+            if index == kategorieOhneGesamt.count - 1 && andereEinnahmen > 0 {
+                kategorienListe.append("Andere")
+                einnahmenListe.append(andereEinnahmen)
             }
         }
+        
         return (kategorienListe, einnahmenListe)
     }
     
