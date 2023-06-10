@@ -237,7 +237,7 @@ struct BenutzerEditView: View {
                    print("Response code: \(response.statusCode)")
                }
                
-               if let data = data {
+               if let _ = data {
                }
                DispatchQueue.main.async {
                    onSave(benutzer)
@@ -248,3 +248,61 @@ struct BenutzerEditView: View {
         presentationMode.wrappedValue.dismiss()
     }
 }
+
+struct SettingsView: View {
+    @AppStorage("colorScheme") private var colorScheme: Int = 0
+
+    var body: some View {
+        NavigationView {
+            VStack{
+                Text("Einstellungen")
+                    .font(.largeTitle)
+                List {
+                    Section(header: Text("Dunklen Modus")) {
+                        Toggle("Dunkler Modus aktiviert", isOn: Binding(
+                            get: { colorScheme == 1 },
+                            set: { colorScheme = $0 ? 1 : 0 }
+                        ))
+                    }
+                    
+                    Section(header: Text("Allgemein")) {
+                        Text("Sprache")
+                        Text("Benutzerprofil")
+                        Text("Datenschutz")
+                    }
+
+                    Section(header: Text("Darstellung")) {
+                        Text("Farbschema")
+                        Text("Schriftgröße")
+                        Text("Hintergrundbild")
+                        Text("Schriftart")
+                    }
+                    
+                    Section(header: Text("Benachrichtigungen")) {
+                        Text("Push-Benachrichtigungen")
+                        Text("Ton")
+                        Text("Vibration")
+                        Text("Badge-Anzahl")
+                    }
+
+                }
+                .listStyle(InsetGroupedListStyle())
+            }
+        }
+        .onChange(of: colorScheme, perform: { _ in
+            saveSettings()
+        })
+        .preferredColorScheme(colorScheme == 1 ? .dark : .light)
+    }
+
+    private func saveSettings() {
+        let settings = colorScheme
+        
+        // Convert the settings to data
+        if let data = try? JSONEncoder().encode(settings) {
+            // Save the data to UserDefaults or any other storage mechanism of your choice
+            UserDefaults.standard.set(data, forKey: "settings")
+        }
+    }
+}
+

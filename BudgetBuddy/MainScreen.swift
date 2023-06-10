@@ -588,21 +588,23 @@ struct LoggedInView: View {
             //NavigationView für die "Einstellungen" (aktuell wird nur zu BenutzerView verlinkt und es gibt einen deafault: "allgemein" und den Chat)
             NavigationView {
                 VStack(alignment: .leading) {
-                    HStack {
-                        Image(systemName: "gear")
-                            .resizable()
-                            .frame(width: 24, height: 24)
-                            .foregroundColor(.blue)
-                        Text("Einstellungen")
-                            .font(.headline)
-                            .foregroundColor(.primary)
-                            .padding(.leading, 8)
+                    NavigationLink(destination: Buddy(email: email, limits: limits, activities: aktivitaeten)) {
+                        HStack {
+                            Image(systemName: "message.fill")
+                                .resizable()
+                                .frame(width: 24, height: 24)
+                                .foregroundColor(.blue)
+                            Text("Chat")
+                                .font(.headline)
+                                .foregroundColor(.primary)
+                                .padding(.leading, 8)
+                        }
                     }
                     Divider()
                     NavigationLink(destination: BenutzerView(email: email))
                     {
                         HStack {
-                            Image(systemName: "person.circle")
+                            Image(systemName: "person.fill")
                                 .resizable()
                                 .frame(width: 24, height: 24)
                                 .foregroundColor(.blue)
@@ -613,13 +615,13 @@ struct LoggedInView: View {
                         }
                     }
                     Divider()
-                    NavigationLink(destination: Buddy(email: email, limits: limits, activities: aktivitaeten)) {
+                    NavigationLink(destination: SettingsView()) {
                         HStack {
-                            Image(systemName: "lightbulb.circle")
+                            Image(systemName: "gearshape.fill")
                                 .resizable()
                                 .frame(width: 24, height: 24)
                                 .foregroundColor(.blue)
-                            Text("Tipps")
+                            Text("Einstellungen")
                                 .font(.headline)
                                 .foregroundColor(.primary)
                                 .padding(.leading, 8)
@@ -920,9 +922,9 @@ struct LoggedInView: View {
         case "Drogerie":
             return "cart"
         case "Freizeit":
-            return "bicycle"
+            return "film"
         case "Unterhaltung":
-            return "gamecontroller"
+            return "music.note"
         case "Lebensmittel":
             return "cart.fill"
         case "Hobbys":
@@ -938,13 +940,14 @@ struct LoggedInView: View {
         case "Finanzen":
             return "dollarsign.circle"
         case "Restaurant":
-            return "food"
+            return "fork.knife"
         case "Shopping":
             return "bag"
         default:
             return "circle"
         }
     }
+
     
     func summeGesamtNachArt(art: String) -> Double {
         let summeEinnahmen = aktivitaeten.reduce(0) { result, aktivitaet in
