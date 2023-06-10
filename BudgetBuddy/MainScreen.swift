@@ -195,14 +195,14 @@ struct LoggedInView: View {
                                     
                                     switch selectedInterval {
                                     case "Jahr":
-                                        getComparisonText(value: aktivitaetenSummen[2] * 100, isIncome: true)
-                                        getComparisonText(value: aktivitaetenSummen[5] * 100, isIncome: false)
+                                        getComparisonText(value: aktivitaetenSummen[2] * 100-100, isIncome: true)
+                                        getComparisonText(value: aktivitaetenSummen[5] * 100-100, isIncome: false)
                                     case "Monat":
-                                        getComparisonText(value: aktivitaetenSummen[8] * 100, isIncome: true)
-                                        getComparisonText(value: aktivitaetenSummen[11] * 100, isIncome: false)
+                                        getComparisonText(value: aktivitaetenSummen[8] * 100-100, isIncome: true)
+                                        getComparisonText(value: aktivitaetenSummen[11] * 100-100, isIncome: false)
                                     case "Woche":
-                                        getComparisonText(value: aktivitaetenSummen[14] * 100, isIncome: true)
-                                        getComparisonText(value: aktivitaetenSummen[17] * 100, isIncome: false)
+                                        getComparisonText(value: aktivitaetenSummen[14] * 100-100, isIncome: true)
+                                        getComparisonText(value: aktivitaetenSummen[17] * 100-100, isIncome: false)
                                     default:
                                         Text("Keine Daten")
                                     }
@@ -341,7 +341,6 @@ struct LoggedInView: View {
                     }
                     .onAppear {
                         fetchAktivitaeten()
-                        fetchActivityByCategory()
                         fetchLimits()
                         fetchBenutzer()
                         fetchTargets()                    
@@ -355,7 +354,6 @@ struct LoggedInView: View {
             }
             .onAppear {
                 fetchAktivitaeten()
-                fetchActivityByCategory()
                 fetchLimits()
                 fetchBenutzer()
                 fetchTargets()
@@ -406,6 +404,7 @@ struct LoggedInView: View {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 10) {
                                         Text("\(aktivitaet.beschreibung)")
+                                            .lineLimit(2)
                                             .fontWeight(.semibold)
                                             .font(.headline)
                                             .foregroundColor(.primary)
@@ -517,6 +516,7 @@ struct LoggedInView: View {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 10) {
                                         Text("\(aktivitaet.beschreibung)")
+                                            .lineLimit(2)
                                             .fontWeight(.semibold)
                                             .font(.headline)
                                             .foregroundColor(.primary)
@@ -761,6 +761,7 @@ struct LoggedInView: View {
                             self.aktivitaeten.remove(at: index)
                         }
                     }
+                    fetchActivityByCategory()
                 }
             } else {
                 print("Invalid response from server")
@@ -770,72 +771,52 @@ struct LoggedInView: View {
     
     
     //Bekommt die Einnahmen oder Ausgaben (Entscheidung über art:String) von einem Benutzer (email) zu einer möglichen Kategorie
+    // Bekommt die Einnahmen oder Ausgaben (Entscheidung über art:String) von einem Benutzer (email) zu einer möglichen Kategorie
     private func fetchActivityByCategory() {
-        let kategorien = ["Drogerie","Freizeit","Unterhaltung","Lebensmittel","Hobbys","Wohnen","Haushalt","Sonstiges","Technik","Finanzen","Restaurant","Shopping"]
+        let kategorien = ["Drogerie", "Freizeit", "Unterhaltung", "Lebensmittel", "Hobbys", "Wohnen", "Haushalt", "Sonstiges", "Technik", "Finanzen", "Restaurant", "Shopping"]
         var gesamtEinnahmen: Double = 0
         var gesamtAusgaben: Double = 0
-
+        
         let dispatchGroup = DispatchGroup() // Erstelle eine neue DispatchGroup
-
+        
         for kategorie in kategorien {
-            guard let urlEinnahmen = URL(string: "http://localhost:8080/api/v1/aktivitaet/withKategorieAndArt/\(email)/\(kategorie)/Einnahmen?username=admin&password=password") else {
-                return
-            }
-            
-            guard let urlAusgaben = URL(string: "http://localhost:8080/api/v1/aktivitaet/withKategorieAndArt/\(email)/\(kategorie)/Ausgaben?username=admin&password=password") else {
-                return
-            }
-
             dispatchGroup.enter()
-                   URLSession.shared.dataTask(with: urlEinnahmen) { (data, response, error) in
-                       guard let data = data, error == nil else {
-                           print("Error fetching data: \(error?.localizedDescription ?? "Unknown error")")
-                           dispatchGroup.leave()
-                           return
-                       }
-
-                       if let einnahmenArr = try? JSONDecoder().decode([EinnahmenResponse].self, from: data) {
-                           let einnahmen = einnahmenArr.reduce(0, { $0 + $1.betrag })
-                           DispatchQueue.main.async {
-                               if let existingKategorieIndex = self.kategorieneinnahmen.firstIndex(where: { $0.id == kategorie }) {
-                                   self.kategorieneinnahmen[existingKategorieIndex].einnahmen = einnahmen
-                               } else {
-                                   self.kategorieneinnahmen.append(Kategorie(id: kategorie, einnahmen: einnahmen))
-                               }
-                               gesamtEinnahmen += einnahmen
-                           }
-                       } else {
-                           print("Invalid response from server")
-                       }
-                       dispatchGroup.leave()
-                   }.resume()
-            
-            dispatchGroup.enter()
-            URLSession.shared.dataTask(with: urlAusgaben) { (data, response, error) in
-                guard let data = data, error == nil else {
-                    print("Error fetching data: \(error?.localizedDescription ?? "Unknown error")")
-                    dispatchGroup.leave()
-                    return
-                }
-
-                if let ausgabenArr = try? JSONDecoder().decode([EinnahmenResponse].self, from: data) {
-                    let ausgaben = ausgabenArr.reduce(0, { $0 + $1.betrag })
-                    DispatchQueue.main.async {
-                        if let existingKategorieIndex = self.kategorienausgaben.firstIndex(where: { $0.id == kategorie }) {
-                            self.kategorienausgaben[existingKategorieIndex].einnahmen = ausgaben
-                        } else {
-                            self.kategorienausgaben.append(Kategorie(id: kategorie, einnahmen: ausgaben))
-                        }
-                        gesamtAusgaben += ausgaben
+            DispatchQueue.global().async {
+                let einnahmen = self.aktivitaeten
+                    .filter { $0.kategorie == kategorie && $0.art == "Einnahmen" }
+                    .reduce(0) { $0 + $1.betrag }
+                
+                DispatchQueue.main.async {
+                    if let existingKategorieIndex = self.kategorieneinnahmen.firstIndex(where: { $0.id == kategorie }) {
+                        self.kategorieneinnahmen[existingKategorieIndex].einnahmen = einnahmen
+                    } else {
+                        self.kategorieneinnahmen.append(Kategorie(id: kategorie, einnahmen: einnahmen))
                     }
-                } else {
-                    print("Invalid response from server")
+                    gesamtEinnahmen += einnahmen
                 }
+                
                 dispatchGroup.leave()
-            }.resume()
-
+            }
+            
+            dispatchGroup.enter()
+            DispatchQueue.global().async {
+                let ausgaben = self.aktivitaeten
+                    .filter { $0.kategorie == kategorie && $0.art == "Ausgaben" }
+                    .reduce(0) { $0 + $1.betrag }
+                
+                DispatchQueue.main.async {
+                    if let existingKategorieIndex = self.kategorienausgaben.firstIndex(where: { $0.id == kategorie }) {
+                        self.kategorienausgaben[existingKategorieIndex].einnahmen = ausgaben
+                    } else {
+                        self.kategorienausgaben.append(Kategorie(id: kategorie, einnahmen: ausgaben))
+                    }
+                    gesamtAusgaben += ausgaben
+                }
+                
+                dispatchGroup.leave()
+            }
         }
-
+        
         dispatchGroup.notify(queue: .main) {
             if let existingGesamtEinnahmenIndex = self.kategorieneinnahmen.firstIndex(where: { $0.id == "Gesamt" }) {
                 self.kategorieneinnahmen[existingGesamtEinnahmenIndex].einnahmen = gesamtEinnahmen
@@ -850,6 +831,7 @@ struct LoggedInView: View {
             }
         }
     }
+
     
     // Bekommt alle Limits aus dem Backend für den jeweiligen Benutzer (-email)
     private func fetchLimits() {
@@ -859,16 +841,35 @@ struct LoggedInView: View {
         }
         
         URLSession.shared.dataTask(with: url) { data, response, error in
-            if let data = data {
-                if let decodedResponse = try? JSONDecoder().decode([Limit].self, from: data) {
-                    DispatchQueue.main.async {
-                        limits = decodedResponse
-                        createLimitAnalysen()
-                    }
-                    return
-                }
+            guard let data = data else {
+                print("Fetch failed: \(error?.localizedDescription ?? "Unknown error")")
+                return
             }
-            print("Fetch failed: \(error?.localizedDescription ?? "Unknown error")")
+            
+            if let decodedResponse = try? JSONDecoder().decode([Limit].self, from: data) {
+                DispatchQueue.main.async { [self] in
+                    // Überprüfe vorhandene Limits
+                    for decodedLimit in decodedResponse {
+                        if let existingLimitIndex = self.limits.firstIndex(where: { $0.id == decodedLimit.id }) {
+                            // Aktualisiere vorhandenes Limit
+                            self.limits[existingLimitIndex] = decodedLimit
+                        } else {
+                            // Füge neues Limit hinzu
+                            self.limits.append(decodedLimit)
+                        }
+                    }
+                    
+                    // Entferne gelöschte Limits
+                    let existingLimitIds = self.limits.map { $0.id }
+                    let decodedLimitIds = decodedResponse.map { $0.id }
+                    let deletedLimitIds = existingLimitIds.filter { !decodedLimitIds.contains($0) }
+                    self.limits.removeAll { deletedLimitIds.contains($0.id) }
+                    
+                    createLimitAnalysen()
+                }
+            } else {
+                print("Failed to decode response data")
+            }
         }.resume()
     }
     
@@ -957,28 +958,48 @@ struct LoggedInView: View {
         
         return HStack{
             if(isIncome){
-                Text("Einnahmen: \(formattedValue)%")
+                if(value>=(-100)){
+                    Text("Einnahmen: \(formattedValue)%")
                     .foregroundColor(.green)
+                    Spacer()
+                    getArrowView(for: value,art: "Einnahmen")
+                }else{
+                    HStack{
+                        Text("Einnahmen:")
+                            .foregroundColor(.green)
+                        Text("keine Vergleichsdaten")
+                    }
+                    Spacer()
+                }
             }else{
-                Text("Ausgaben: \(formattedValue)%")
-                    .foregroundColor(.red)
+                if(value>=(-100)){
+                    Text("Ausgaben: \(formattedValue)%")
+                        .foregroundColor(.red)
+                    Spacer()
+                    getArrowView(for: value,art: "Ausgaben")
+                }else{
+                    HStack{
+                        Text("Ausgaben:")
+                            .foregroundColor(.red)
+                        Text("keine Vergleichsdaten")
+                    }
+                    Spacer()
+                }
             }
-            Spacer()
-            getArrowView(for: value)
         }
         .padding(.horizontal, 4)
     }
     
-    func getArrowView(for value: Double) -> some View {
+    func getArrowView(for value: Double, art: String) -> some View {
         if value > 120 {
             return AnyView(Image(systemName: "arrow.up.right")
-                .foregroundColor(.green))
-        } else if value >= 80 && value <= 120 {
+                .foregroundColor(art == "Einnahmen" ? .green : .red))
+        } else if (value >= 80 && value <= 120) {
             return AnyView(Image(systemName: "arrow.right")
-                .foregroundColor(.white))
+                .foregroundColor(colorScheme == .dark ? .white : .black))
         } else {
             return AnyView(Image(systemName: "arrow.down.right")
-                .foregroundColor(.red))
+                .foregroundColor(art == "Ausgaben" ? .green : .red))
         }
     }
 
@@ -998,7 +1019,7 @@ struct LoggedInView: View {
         if ((last24 - last12) != 0 ){
             diff = last12 / (last24 - last12)
         } else {
-            diff = 1000
+            diff = -2 // -200% ist ja nicht erreichbar
         }
         
         return [last12,(last24-last12),diff]
@@ -1017,7 +1038,7 @@ struct LoggedInView: View {
         if ((last2 - last) != 0 ){
             diff = last / (last2 - last)
         } else {
-            diff = 1000
+            diff = -2 // -200% ist ja nicht erreichbar
         }
         return [last,(last2-last),diff]
     }
@@ -1035,7 +1056,7 @@ struct LoggedInView: View {
         if ((last14 - last7) != 0 ){
             diff = last7 / (last14 - last7)
         } else {
-            diff = 1000
+            diff = -2 // -200% ist ja nicht erreichbar
         }
         return [last7,(last14-last7),diff]
     }
