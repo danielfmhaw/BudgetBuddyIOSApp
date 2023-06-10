@@ -53,7 +53,7 @@ struct ContentView: View {
     
     @State private var showLoggedInView = false
     @State private var loginFailed = false
-    @State private var emailExits = false
+    @State private var emailExists = false
     @Environment(\.colorScheme) var colorScheme
 
 
@@ -135,7 +135,7 @@ struct ContentView: View {
                 
                 // Verlinkung zum Ändern des Passworts
                 if loginFailed {
-                    if (emailExits) {
+                    if (emailExists) {
                         NavigationLink(destination: PasswortUpdate(emailInput: email)) {
                             Text("Passwort verändern")
                         }
@@ -191,71 +191,58 @@ struct ContentView: View {
         }
     }
     
-    //Checkt, ob die Email schon existiert im Backend
-    func checkEmailExists(email: String) -> Bool {
-        guard let url = URL(string: "http://localhost:8080/api/v1/benutzer/\(email)?username=admin&password=password") else {
+    func authenticate() -> Bool {
+        let urlString = "http://localhost:8080/api/v1/benutzer/\(email)?username=admin&password=password"
+        guard let url = URL(string: urlString) else {
+            print("Invalid URL")
             return false
         }
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
 
-        let semaphore = DispatchSemaphore(value: 0)
-        var emailExists = false
-
-        URLSession.shared.dataTask(with: request) { _, response, error in
-            defer {
-                semaphore.signal()
-            }
-
-            if let error = error {
-                print("Fehler beim Abrufen der Daten: \(error)")
-                return
-            }
-
-            if let response = response as? HTTPURLResponse, response.statusCode == 200 {
-                // Die E-Mail existiert
-                emailExists = true
-            }
-        }.resume()
-
-        semaphore.wait()
-
-        return emailExists
-    }
-    
-    // Zieht die Benutzerdaten aus Backend und überprüft, ob successful oder failed
-    func authenticate() -> Bool {
-        emailExits=checkEmailExists(email: emailInput ?? "")
-        let url = URL(string: "http://localhost:8080/api/v1/benutzer?username=admin&password=password")!
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-        let parameters = ["email": email, "password": password]
-        request.httpBody = try! JSONSerialization.data(withJSONObject: parameters)
-        
+        emailExists = false
         var success = false
-        
+
         let semaphore = DispatchSemaphore(value: 0)
-        
+
         URLSession.shared.dataTask(with: request) { data, response, error in
             defer { semaphore.signal() }
-            
-            guard let _ = data, let response = response as? HTTPURLResponse, error == nil else {
-                print("Error: \(error?.localizedDescription ?? "Unknown error")")
+
+            if let error = error {
+                print("Error: \(error.localizedDescription)")
                 return
             }
-            
-            if response.statusCode == 200 {
-                // Authentifikation erfolgreich
-                success = true
-            } else {
-                print("Authentication failed with status code \(response.statusCode)")
+
+            if let response = response as? HTTPURLResponse {
+                if response.statusCode == 200 {
+                    // Die E-Mail existiert
+                    emailExists = true
+
+                    if let data = data {
+                        do {
+                            let json = try JSONSerialization.jsonObject(with: data, options: []) as? [String: Any]
+                            if let passwordFromServer = json?["password"] as? String {
+                                // Überprüfe das Passwort
+                                success = (passwordFromServer == password)
+                            }
+                        } catch {
+                            loginFailed = true
+                            print("Error parsing JSON: \(error)")
+                        }
+                    }
+                } else if response.statusCode == 404 {
+                    // Die E-Mail existiert nicht
+                    emailExists = false
+                    success = false
+                } else {
+                    print("Authentication failed with status code \(response.statusCode)")
+                }
             }
         }.resume()
-        
+
         semaphore.wait()
-        
+
         return success
     }
     
@@ -320,7 +307,7 @@ struct PasswortUpdate:View{
 
                 Button(action: {
                     if validateInputs() {
-                        sendToBackend()
+                        updateBenutzer()
                     }
                 }) {
                     Text("Einloggen")
@@ -335,7 +322,7 @@ struct PasswortUpdate:View{
                 }
             }
             .onAppear {
-                fetchData(email: emailInput ?? "")
+                fetchBenutzer(email: emailInput ?? "")
             }
             .navigationBarTitle("Passwort aktualisieren", displayMode: .inline)
         }
@@ -361,7 +348,7 @@ struct PasswortUpdate:View{
     }
     
     // Zieht den Benuter aus dem Backend
-    func fetchData(email:String) {
+    func fetchBenutzer(email:String) {
         guard let url = URL(string: "http://localhost:8080/api/v1/benutzer/\(email)?username=admin&password=password") else {
             print("Ungültige URL")
             return
@@ -392,7 +379,7 @@ struct PasswortUpdate:View{
     }
     
     // Benutzer wird im Backend gespeichert
-    func sendToBackend() {
+    func updateBenutzer() {
         benutzer?.password=confirmPassword
         
         guard let url = URL(string: "http://localhost:8080/api/v1/benutzer?username=admin&password=password") else {
@@ -418,7 +405,7 @@ struct PasswortUpdate:View{
                 print("Response code: \(response.statusCode)")
             }
             
-            if let data = data {
+            if let _ = data {
             }
             DispatchQueue.main.async {
                 showLoggedInView=true

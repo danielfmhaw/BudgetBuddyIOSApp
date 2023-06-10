@@ -14,9 +14,9 @@ struct Activity: Identifiable, Codable {
 // Hier werden die verschiedenen Graphen (BarChart oder LineChart) für unterschiedliche Zeiträume angezeigt
 struct AnalyseView: View {
     let email: String
+    let aktivitaeten: [Aktivitaet]
     
     let dispatchGroup = DispatchGroup()
-    @State private var aktivitaeten: [Aktivitaet] = []
     @State private var einnahmen: [Activity] = []
     @State private var ausgaben: [Activity] = []
     
@@ -258,9 +258,6 @@ struct AnalyseView: View {
                 }
             }
         }
-        .onAppear {
-            getAktivitaeten()
-        }
     }
     
     // Hier werden im Abhängigkeit von dem ausgwählten Zeitraum die Diagramme unterschiedlich "beladen"
@@ -414,30 +411,5 @@ struct AnalyseView: View {
         dateFormatter.dateFormat = "dd.MM.yyyy"
         let year = Calendar.current.component(.year, from: date)
         return "\(dateFormatter.string(from: date)), \(year)"
-    }
-
-
-    
-    //Bekommt die Einnahmen oder Ausgaben (Entscheidung über art:String) von einem Benutzer (email) zu einer möglichen Kategorie
-    func getAktivitaeten() {
-        guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/\(email)?username=admin&password=password") else {
-            print("Invalid URL")
-            return
-        }
-
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            guard let data = data, error == nil else {
-                print("Error: \(error?.localizedDescription ?? "Unknown error")")
-                return
-            }
-
-            if let decodedResponse = try? JSONDecoder().decode([Aktivitaet].self, from: data) {
-                DispatchQueue.main.async {
-                    self.aktivitaeten = decodedResponse
-                }
-            } else {
-                print("Invalid response from server")
-            }
-        }.resume()
     }
 }

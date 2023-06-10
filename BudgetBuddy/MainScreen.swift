@@ -42,9 +42,6 @@ struct LoggedInView: View {
     @State var limits: [Limit] = []
     @State var limitAnalysen: [LimitAnalyse] = []
     
-    @State private var gesamtEinnahmen: Double = 0.0
-    @State private var gesamtAusgaben: Double = 0.0
-    
     @State var targets: [Target] = []
     @State private var kategorieneinnahmen: [Kategorie] = []
     @State private var kategorienausgaben: [Kategorie] = []
@@ -153,7 +150,7 @@ struct LoggedInView: View {
                                                     
                                                     Text("\(String(format: "%.2f", kategorie.einnahmen)) €")
                                                         .font(.subheadline)
-                                                        .foregroundColor(.green)
+                                                        .foregroundColor(.red)
                                                 }
                                                 .padding(.horizontal, 4)
                                             }
@@ -171,7 +168,7 @@ struct LoggedInView: View {
                             }
                             
                             VStack{
-                                NavigationLink(destination: AnalyseView(email: email)) {
+                                NavigationLink(destination: AnalyseView(email: email,aktivitaeten: aktivitaeten)) {
                                     VStack(alignment: .leading) {
                                         HStack(spacing: 8) {
                                             Image(systemName: "chart.bar.fill")
@@ -343,10 +340,10 @@ struct LoggedInView: View {
                         
                     }
                     .onAppear {
-                        getAktivitaeten(name:"Beides")
-                        getEinnahmen()
+                        fetchAktivitaeten()
+                        fetchActivityByCategory()
                         fetchLimits()
-                        getBenutzer()
+                        fetchBenutzer()
                         fetchTargets()                    
                     }
                     .navigationBarTitle(Text("Übersicht"), displayMode: .inline)
@@ -357,10 +354,10 @@ struct LoggedInView: View {
                 Text("Übersicht")
             }
             .onAppear {
-                getAktivitaeten(name:"Beides")
-                getEinnahmen()
+                fetchAktivitaeten()
+                fetchActivityByCategory()
                 fetchLimits()
-                getBenutzer()
+                fetchBenutzer()
                 fetchTargets()
             }
 
@@ -401,6 +398,7 @@ struct LoggedInView: View {
                     
                     List {
                         ForEach(Array(aktivitaeten
+                            .filter { $0.art == "Einnahmen" }
                             .filter { sucheEinnahmen.isEmpty ? true : $0.beschreibung.localizedCaseInsensitiveContains(sucheEinnahmen) }
                             .sorted(by: soriertenEinnahmen == .ascending ? { $0.datum < $1.datum } : { $0.datum > $1.datum })
                                         .enumerated()), id: \.element.id) { index, aktivitaet in
@@ -434,7 +432,7 @@ struct LoggedInView: View {
                                 .padding(.vertical, 10)
                                 .contextMenu {
                                     Button(action: {
-                                        deleteAktivitaet(id: aktivitaet.id,art: "Einnahmen")
+                                        deleteAktivitaet(id: aktivitaet.id)
                                     }) {
                                         Text("Löschen")
                                         Image(systemName: "trash")
@@ -446,9 +444,10 @@ struct LoggedInView: View {
                             let indexesToDelete = indexSet.map { $0 }
                             for index in indexesToDelete {
                                 let aktivitaet = aktivitaeten
+                                    .filter { $0.art == "Einnahmen" }
                                     .filter { sucheEinnahmen.isEmpty ? true : $0.beschreibung.localizedCaseInsensitiveContains(sucheEinnahmen) }
                                     .sorted(by: soriertenEinnahmen == .ascending ? { $0.datum < $1.datum } : { $0.datum > $1.datum })[index]
-                                deleteAktivitaet(id: aktivitaet.id, art: "Einnahmen")
+                                deleteAktivitaet(id: aktivitaet.id)
                             }
                         }
                     }
@@ -458,13 +457,13 @@ struct LoggedInView: View {
                 }
                 .navigationBarTitle(Text("Übersicht"), displayMode: .inline)
                 .navigationBarItems(trailing:
-                    NavigationLink(destination: AddNewActivityView(user: user, actart: "Einnahmen")) {
+                        NavigationLink(destination: AddNewActivityView(user: user, actart: "Einnahmen",targets:targets)) {
                         Text("Hinzufügen")
                     }
                 )
                 .onAppear() {
-                    getAktivitaeten(name: "Einnahmen")
-                    getBenutzer()
+                    fetchAktivitaeten()
+                    fetchBenutzer()
                 }
             }
             .tabItem {
@@ -510,6 +509,7 @@ struct LoggedInView: View {
                     
                     List {
                         ForEach(Array(aktivitaeten
+                                        .filter { $0.art == "Ausgaben" }
                                         .filter { sucheAusgaben.isEmpty ? true : $0.beschreibung.localizedCaseInsensitiveContains(sucheAusgaben) }
                                         .sorted(by: soriertenAusgaben == .ascending ? { $0.datum < $1.datum } : { $0.datum > $1.datum })
                                         .enumerated()), id: \.element.id) { index, aktivitaet in
@@ -543,7 +543,7 @@ struct LoggedInView: View {
                                 .padding(.vertical, 10)
                                 .contextMenu {
                                     Button(action: {
-                                        deleteAktivitaet(id: aktivitaet.id, art: "Ausgaben")
+                                        deleteAktivitaet(id: aktivitaet.id)
                                     }) {
                                         Text("Löschen")
                                         Image(systemName: "trash")
@@ -555,9 +555,10 @@ struct LoggedInView: View {
                             let indexesToDelete = indexSet.map { $0 }
                             for index in indexesToDelete {
                                 let aktivitaet = aktivitaeten
+                                    .filter { $0.art == "Ausgaben" }
                                     .filter { sucheAusgaben.isEmpty ? true : $0.beschreibung.localizedCaseInsensitiveContains(sucheAusgaben) }
                                     .sorted(by: soriertenAusgaben == .ascending ? { $0.datum < $1.datum } : { $0.datum > $1.datum })[index]
-                                deleteAktivitaet(id: aktivitaet.id, art: "Ausgaben")
+                                deleteAktivitaet(id: aktivitaet.id)
                             }
                         }
                     }
@@ -567,19 +568,20 @@ struct LoggedInView: View {
                 }
                 .navigationBarTitle(Text("Übersicht"), displayMode: .inline)
                     .navigationBarItems(trailing:
-                        NavigationLink(destination: AddNewActivityView(user: user, actart: "Ausgaben")) {
+                            NavigationLink(destination: AddNewActivityView(user: user, actart: "Ausgaben",targets:targets)) {
                             Text("Hinzufügen")
                         }
                     )
                 .onAppear() {
-                    getAktivitaeten(name: "Ausgaben")
-                    getBenutzer()
+                    fetchAktivitaeten()
+                    fetchBenutzer()
                 }
             }
             .tabItem{
                 Image(systemName: "eurosign.square.fill")
                 Text("Ausgaben")
             }
+            
             
     
             
@@ -611,7 +613,7 @@ struct LoggedInView: View {
                         }
                     }
                     Divider()
-                    NavigationLink(destination: Buddy(email: email)) {
+                    NavigationLink(destination: Buddy(email: email, limits: limits, activities: aktivitaeten)) {
                         HStack {
                             Image(systemName: "lightbulb.circle")
                                 .resizable()
@@ -646,13 +648,15 @@ struct LoggedInView: View {
                 Image(systemName: "ellipsis.circle.fill")
                 Text("Mehr")
             }
-
-               
+            .onAppear{
+                fetchAktivitaeten()
+                fetchLimits()
+            }
         }
     }
     
     //Löscht die Aktivität im Backend
-    func deleteAktivitaet(id: Int,art:String) {
+    func deleteAktivitaet(id: Int) {
         guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/\(id)?username=admin&password=password") else {
             print("Ungültige URL")
             return
@@ -673,8 +677,8 @@ struct LoggedInView: View {
             }
             
             if httpResponse.statusCode == 200 {
-                // Aktualisiere die Aktivitätenliste
-                getAktivitaeten(name: art)
+                // Aktualisiere die Aktivitätenliste, d.h. lösche Aktivitat mit entsprecheneder ID aus Liste
+                fetchAktivitaeten()
             } else {
                 print("Fehler beim Löschen der Aktivität: HTTP-Statuscode \(httpResponse.statusCode)")
             }
@@ -682,7 +686,7 @@ struct LoggedInView: View {
     }
 
     //Bekommt die Benutzerdaten aus dem Backend
-    func getBenutzer() {
+    func fetchBenutzer() {
         guard let url = URL(string: "http://localhost:8080/api/v1/benutzer/\(email)?username=admin&password=password") else {
             return
         }
@@ -704,14 +708,8 @@ struct LoggedInView: View {
     }
     
     //Bekommt die Aktivitäten aus dem Backend
-    func getAktivitaeten(name:String) {
-        var url: URL?
-
-        if name == "Beides" {
-            url = URL(string: "http://localhost:8080/api/v1/aktivitaet/\(email)?username=admin&password=password")
-        } else {
-            url = URL(string: "http://localhost:8080/api/v1/aktivitaet/withArt/\(email)/\(name)?username=admin&password=password")
-        }
+    func fetchAktivitaeten() {
+        let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/\(email)?username=admin&password=password")
 
         guard let requestURL = url else {
             print("Invalid URL")
@@ -726,17 +724,43 @@ struct LoggedInView: View {
 
             if let decodedResponse = try? JSONDecoder().decode([Aktivitaet].self, from: data) {
                 DispatchQueue.main.async {
-                    self.aktivitaeten = decodedResponse
-                    if(name=="Beides"){
-                        gesamtEinnahmen = summeGesamtNachArt(art:"Einnahmen")
-                        gesamtAusgaben = summeGesamtNachArt(art:"Ausgaben")
+                    // Prüfen, welche Aktivitäten bereits vorhanden sind
+                    let existingIDs = Set(self.aktivitaeten.map { $0.id })
+
+                    // Aktualisierte Aktivitäten, die hinzugefügt oder aktualisiert werden sollen
+                    var updatedAktivitaeten: [Aktivitaet] = []
+
+                    for aktivitaet in decodedResponse {
+                        if existingIDs.contains(aktivitaet.id) {
+                            // Aktualisieren, falls die Aktivität bereits vorhanden ist
+                            if let index = self.aktivitaeten.firstIndex(where: { $0.id == aktivitaet.id }) {
+                                self.aktivitaeten[index] = aktivitaet
+                            }
+                        } else {
+                            // Hinzufügen, falls die Aktivität noch nicht vorhanden ist
+                            updatedAktivitaeten.append(aktivitaet)
+                        }
                     }
+
+                    // Hinzufügen der neuen Aktivitäten
+                    self.aktivitaeten.append(contentsOf: updatedAktivitaeten)
+
+                    // Aktualisierung der Summen (nur für hinzugefügte Aktivitäten)
                     aktivitaetenSummen.append(contentsOf: getYearSum(art: "Einnahmen", aktivitaeten: aktivitaeten))
                     aktivitaetenSummen.append(contentsOf: getYearSum(art: "Ausgaben", aktivitaeten: aktivitaeten))
                     aktivitaetenSummen.append(contentsOf: getMonthSum(art: "Einnahmen", aktivitaeten: aktivitaeten))
                     aktivitaetenSummen.append(contentsOf: getMonthSum(art: "Ausgaben", aktivitaeten: aktivitaeten))
                     aktivitaetenSummen.append(contentsOf: getWeekSum(art: "Einnahmen", aktivitaeten: aktivitaeten))
                     aktivitaetenSummen.append(contentsOf: getWeekSum(art: "Ausgaben", aktivitaeten: aktivitaeten))
+
+                    // Entfernen der Aktivitäten, die in der DB gelöscht wurden
+                    let currentIDs = Set(decodedResponse.map { $0.id })
+                    let deletedAktivitaeten = self.aktivitaeten.filter { !currentIDs.contains($0.id) }
+                    for deletedAktivitaet in deletedAktivitaeten {
+                        if let index = self.aktivitaeten.firstIndex(where: { $0.id == deletedAktivitaet.id }) {
+                            self.aktivitaeten.remove(at: index)
+                        }
+                    }
                 }
             } else {
                 print("Invalid response from server")
@@ -746,7 +770,7 @@ struct LoggedInView: View {
     
     
     //Bekommt die Einnahmen oder Ausgaben (Entscheidung über art:String) von einem Benutzer (email) zu einer möglichen Kategorie
-    private func getEinnahmen() {
+    private func fetchActivityByCategory() {
         let kategorien = ["Drogerie","Freizeit","Unterhaltung","Lebensmittel","Hobbys","Wohnen","Haushalt","Sonstiges","Technik","Finanzen","Restaurant","Shopping"]
         var gesamtEinnahmen: Double = 0
         var gesamtAusgaben: Double = 0
@@ -862,6 +886,26 @@ struct LoggedInView: View {
         print(limitAnalysen)
     }
     
+    //Bekommt die Targets aus dem Backend
+    func fetchTargets() {
+        guard let url = URL(string: "http://localhost:8080/api/v1/targets/\(email)?username=admin&password=password") else {
+            print("Invalid URL")
+            return
+        }
+
+        URLSession.shared.dataTask(with: url) { data, response, error in
+            if let data = data {
+                if let decodedResponse = try? JSONDecoder().decode([Target].self, from: data) {
+                    DispatchQueue.main.async {
+                        targets = decodedResponse
+                    }
+                    return
+                }
+            }
+            print("Fetch failed: \(error?.localizedDescription ?? "Unknown error")")
+        }.resume()
+    }
+    
     // Summiert die Summe in der jeweiligen Kategorie auf
     private func getAktivitaetenSummeInKategorie(kategorie: String) -> Double {
         let aktivitaetenInKategorie = aktivitaeten.filter { $0.kategorie == kategorie && $0.art == "Ausgaben"}
@@ -908,26 +952,6 @@ struct LoggedInView: View {
         return summeEinnahmen
     }
     
-    //Bekommt die Targets aus dem Backend
-    func fetchTargets() {
-        guard let url = URL(string: "http://localhost:8080/api/v1/targets/\(email)?username=admin&password=password") else {
-            print("Invalid URL")
-            return
-        }
-
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            if let data = data {
-                if let decodedResponse = try? JSONDecoder().decode([Target].self, from: data) {
-                    DispatchQueue.main.async {
-                        targets = decodedResponse
-                    }
-                    return
-                }
-            }
-            print("Fetch failed: \(error?.localizedDescription ?? "Unknown error")")
-        }.resume()
-    }
-    
     func getComparisonText( value: Double, isIncome: Bool) -> some View {
         let formattedValue = String(format: "%.2f", value)
         
@@ -960,7 +984,7 @@ struct LoggedInView: View {
 
     
     func getYearSum(art: String, aktivitaeten: [Aktivitaet]) -> [Double] {
-        let analyseView = AnalyseView(email: email)
+        let analyseView = AnalyseView(email: email,aktivitaeten: aktivitaeten)
         let last12activityMonths = analyseView.getXActivityMonths(art: art, aktivitaeten: aktivitaeten, anzahl: 12)
         let last12 = last12activityMonths.reduce(0) { result, activity in
             return result + activity.amount
@@ -980,7 +1004,7 @@ struct LoggedInView: View {
         return [last12,(last24-last12),diff]
     }
     func getMonthSum(art: String, aktivitaeten: [Aktivitaet]) -> [Double] {
-        let analyseView = AnalyseView(email: email)
+        let analyseView = AnalyseView(email: email,aktivitaeten: aktivitaeten)
         let lastactivityMonths = analyseView.getXActivityMonths(art: art, aktivitaeten: aktivitaeten, anzahl: 1)
         let last = lastactivityMonths.reduce(0) { result, activity in
             return result + activity.amount
@@ -998,7 +1022,7 @@ struct LoggedInView: View {
         return [last,(last2-last),diff]
     }
     func getWeekSum(art: String, aktivitaeten: [Aktivitaet]) -> [Double] {
-        let analyseView = AnalyseView(email: email)
+        let analyseView = AnalyseView(email: email,aktivitaeten: aktivitaeten)
         let activitieslast7 = analyseView.getActivityLastXDays(art: art, aktivitaeten: aktivitaeten, anzahl: 7)
         let last7 = activitieslast7.reduce(0) { result, activity in
             return result + activity.amount

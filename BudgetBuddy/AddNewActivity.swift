@@ -9,10 +9,10 @@ import SwiftUI
 struct AddNewActivityView: View {
     let user: Benutzer?
     let actart:String?
+    let targets: [Target]
 
     @State var betrag: String = ""
     @State var beschreibung: String = ""
-    @State var targets: [Target] = []
     @State var selectedDisplayMode = 0
 
     @State private var selectedKategorie = "Lebensmittel"
@@ -98,7 +98,7 @@ struct AddNewActivityView: View {
                         let dateString = formatter.string(from: datum)
                         var newAktivitaet: Aktivitaet?
 
-                        if (isChecked) {
+                        if (isChecked && !(selectedTarget == "Keine Sparziele")) {
                             if let target = targets.first(where: { $0.targetname == selectedTarget }) {
                                 newAktivitaet = Aktivitaet(id: 0, betrag: betragDouble, beschreibung: beschreibung, kategorie: selectedKategorie, art: actart ?? "", benutzer: user, datum: dateString, savingsTarget: target)
                             }
@@ -116,36 +116,21 @@ struct AddNewActivityView: View {
                 }
             }
             .onAppear {
-                fetchTargets(email: user?.email ?? "")
+                setupTargets(email: user?.email ?? "")
             }
             .navigationBarTitle(Text("Neue Aktivität"), displayMode: .inline)
         }
     }
     
     // Bekommt die Targets aus dem Backend
-    func fetchTargets(email: String) {
-        guard let url = URL(string: "http://localhost:8080/api/v1/targets/\(email)?username=admin&password=password") else {
-            print("Invalid URL")
-            return
+    func setupTargets(email: String) {
+        if(targets.count>0){
+            beschreibungTargets.append(contentsOf:  targets.map { $0.targetname })
+            selectedTarget = beschreibungTargets.first ?? ""
+        }else{
+            beschreibungTargets.append("Keine Sparziele")
+            selectedTarget = "Keine Sparziele"
         }
-
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            if let data = data {
-                if let decodedResponse = try? JSONDecoder().decode([Target].self, from: data) {
-                    DispatchQueue.main.async {
-                        targets = decodedResponse
-                        if(targets.count>0){
-                            beschreibungTargets.append(contentsOf:  decodedResponse.map { $0.targetname })
-                            selectedTarget = beschreibungTargets.first ?? ""
-                        }else{
-                            beschreibungTargets.append("Keine Sparziele")
-                        }
-                    }
-                    return
-                }
-            }
-            print("Fetch failed: \(error?.localizedDescription ?? "Unknown error")")
-        }.resume()
     }
     
     func calculateDisplayMode(with selectedDisplayMode: Int) -> Double {

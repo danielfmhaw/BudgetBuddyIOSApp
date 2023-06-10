@@ -7,8 +7,8 @@ import Charts
 
 struct Buddy: View {
     let email: String
-    @State var limits: [Limit] = []
-    @State var activities: [Aktivitaet] = []
+    let limits: [Limit]
+    let activities: [Aktivitaet]
     @State var limitAnalysen: [LimitAnalyse] = []
 
     @State private var chatText: String = ""
@@ -98,9 +98,8 @@ struct Buddy: View {
                .padding(.bottom, 10)
            }
        }
-       .onAppear {
-           fetchLimits()
-           fetchActivities()
+       .onAppear{
+           createLimitAnalysen()
        }
     }
      
@@ -220,48 +219,5 @@ struct Buddy: View {
         let aktivitaetenInKategorie = aktivitaetenAusgaben.filter { $0.kategorie == kategorie }
         let betragSumme = aktivitaetenInKategorie.reduce(0) { $0 + $1.betrag }
         return betragSumme
-    }
-
-
-    // Limits werden aus dem Backend für den jeweiligen Benutzer geladen
-    private func fetchLimits() {
-        guard let url = URL(string: "http://localhost:8080/api/v1/limit/\(email)?username=admin&password=password") else {
-            print("Invalid URL")
-            return
-        }
-        
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            if let data = data {
-                if let decodedResponse = try? JSONDecoder().decode([Limit].self, from: data) {
-                    DispatchQueue.main.async {
-                        limits = decodedResponse
-                        createLimitAnalysen()
-                    }
-                    return
-                }
-            }
-            print("Fetch failed: \(error?.localizedDescription ?? "Unknown error")")
-        }.resume()
-    }
-    
-    // Alle Aktivitäten werden aus dem Backend für den jeweiligen Nutzer geladen
-    private func fetchActivities() {
-        guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/\(email)?username=admin&password=password") else {
-            print("Invalid URL")
-            return
-        }
-        
-        URLSession.shared.dataTask(with: url) { data, response, error in
-            if let data = data {
-                if let decodedResponse = try? JSONDecoder().decode([Aktivitaet].self, from: data) {
-                    DispatchQueue.main.async {
-                        activities = decodedResponse
-                        createLimitAnalysen()
-                    }
-                    return
-                }
-            }
-            print("Fetch failed: \(error?.localizedDescription ?? "Unknown error")")
-        }.resume()
     }
 }
