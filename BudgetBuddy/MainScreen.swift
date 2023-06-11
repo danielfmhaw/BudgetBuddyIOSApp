@@ -68,8 +68,9 @@ struct LoggedInView: View {
                                 .font(.largeTitle)
                                 .fontWeight(.bold)
                                 .foregroundColor(user?.kontostand ?? 0.0 >= 0 ? .green : .red)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.5)
                         }.padding()
-                        
                         
                         VStack(alignment: .leading) {
                             NavigationLink(destination: Kreisdiagramm(kategorien: kategorieneinnahmen, art: "Einnahmen", email: email)) {
@@ -87,25 +88,57 @@ struct LoggedInView: View {
                                     }
 
                                     if !kategorieneinnahmen.isEmpty {
+                                        Divider()
                                         let filteredSortedKategorien = kategorieneinnahmen.filter { $0.einnahmen != 0 }.sorted { $0.einnahmen > $1.einnahmen }
                                         
                                         let endIndex = min(filteredSortedKategorien.count, 4)
                                         
                                         if endIndex > 1 {
-                                            ForEach(1..<endIndex, id: \.self) { index in
-                                                let kategorie = filteredSortedKategorien[index]
-                                                HStack {
-                                                    Text("\(index). \(kategorie.id)")
-                                                        .font(.subheadline)
-                                                        .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
+                                            let gesamt = filteredSortedKategorien[0].einnahmen
+                                            
+                                            HStack() {
+                                                Spacer()
+                                                
+                                                ForEach(1..<endIndex, id: \.self) { index in
+                                                    let kategorie = filteredSortedKategorien[index]
+                                                    let prozentualerAnteil = kategorie.einnahmen / gesamt
                                                     
-                                                    Spacer()
-                                                    
-                                                    Text("\(String(format: "%.2f", kategorie.einnahmen)) €")
-                                                        .font(.subheadline)
-                                                        .foregroundColor(.green)
+                                                    VStack {
+                                                        Text(kategorie.id)
+                                                            .font(.subheadline)
+                                                            .foregroundColor(colorScheme == .dark ? .white : .black)
+                                                        
+                                                        ZStack {
+                                                            Circle()
+                                                                .frame(width: 60, height: 60)
+                                                                .foregroundColor(colorScheme == .light ? Color.white : Color.black)
+                                                                .overlay(
+                                                                    Circle()
+                                                                        .stroke(Color.green, lineWidth: 2)
+                                                                )
+                                                            
+                                                            Image(systemName: categoryIcon(for: kategorie.id))
+                                                                .font(.system(size: 24))
+                                                                .foregroundColor(.green)
+                                                            
+                                                            
+                                                            Circle()
+                                                                .trim(from: 0, to: CGFloat(prozentualerAnteil))
+                                                                .stroke(Color.green, lineWidth: 5)
+                                                                .frame(width: 60, height: 60)
+                                                                .rotationEffect(.degrees(-90))
+                                                        }
+                                                        .padding(.horizontal,20)
+                                                        
+                                                        Text("\(String(format: "%0.0f", kategorie.einnahmen))€")
+                                                            .font(.subheadline)
+                                                            .foregroundColor(.green)
+                                                            .lineLimit(1)
+                                                            .minimumScaleFactor(0.5)
+                                                    }
                                                 }
-                                                .padding(.horizontal, 4)
+                                                
+                                                Spacer()
                                             }
                                         }
                                     }
@@ -139,8 +172,12 @@ struct LoggedInView: View {
                                         let endIndex = min(filteredSortedKategorien.count, 4)
                                         
                                         if endIndex > 1 {
+                                            let gesamt = filteredSortedKategorien[0].einnahmen
+                                            
                                             ForEach(1..<endIndex, id: \.self) { index in
                                                 let kategorie = filteredSortedKategorien[index]
+                                                let prozentualerAnteil = kategorie.einnahmen / gesamt
+                                                
                                                 HStack {
                                                     Text("\(index). \(kategorie.id)")
                                                         .font(.subheadline)
@@ -152,7 +189,17 @@ struct LoggedInView: View {
                                                         .font(.subheadline)
                                                         .foregroundColor(.red)
                                                 }
-                                                .padding(.horizontal, 4)
+                                                
+                                                ZStack(alignment: .leading) {
+                                                    Rectangle()
+                                                        .frame(height: 8)
+                                                        .foregroundColor(.gray)
+                                                    
+                                                    Rectangle()
+                                                        .frame(width: CGFloat(prozentualerAnteil) * UIScreen.main.bounds.width, height: 8)
+                                                        .foregroundColor(.red)
+                                                }
+                                                .cornerRadius(4)
                                             }
                                         }
                                     }
@@ -217,17 +264,26 @@ struct LoggedInView: View {
                             )
                             .shadow(color: .gray, radius: 2, x: 0, y: 2)
                             VStack(alignment: .leading){
-                                NavigationLink(destination: LimitAnalyseView(email: email, limitAnalysen: limitAnalysen, limits: limits)) {
-                                    HStack {
-                                        Image(systemName: "chart.bar.doc.horizontal.fill")
-                                            .resizable()
-                                            .frame(width: 24, height: 24)
-                                            .foregroundColor(.blue)
-                                        Text("Budgets")
-                                            .font(.headline)
-                                            .foregroundColor(.primary)
-                                            .padding(.leading, 8)
+                                HStack{
+                                    NavigationLink(destination: LimitAnalyseView(email: email, limitAnalysen: limitAnalysen, limits: limits)) {
+                                        HStack {
+                                            Image(systemName: "chart.bar.doc.horizontal.fill")
+                                                .resizable()
+                                                .frame(width: 24, height: 24)
+                                                .foregroundColor(.blue)
+                                            Text("Budgets")
+                                                .font(.headline)
+                                                .foregroundColor(.primary)
+                                                .padding(.leading, 8)
+                                        }
                                         Spacer()
+                                    }
+                                    if let user = user {
+                                        NavigationLink(destination: LimitView(email: email, benutzer: user)) {
+                                            Text("Bearbeiten")
+                                        }
+                                    }
+                                    NavigationLink(destination: LimitAnalyseView(email: email, limitAnalysen: limitAnalysen, limits: limits)) {
                                         Image(systemName: "chevron.right")
                                             .foregroundColor(.primary)
                                             .padding(.trailing, 8)
@@ -252,14 +308,14 @@ struct LoggedInView: View {
                                                             Image(systemName: categoryIcon(for: limit.kategorie))
                                                                 .resizable()
                                                                 .frame(width: 20, height: 20)
-                                                                .foregroundColor(.white)
+                                                                .foregroundColor(colorScheme == .light ? Color.white : Color.black)
                                                         }
                                                     }
                                                     .padding(4)
                                                 }
                                             }
                                             if let user = user {
-                                                NavigationLink(destination: LimitView(email: email, benutzer: user)) {
+                                                NavigationLink(destination: LimitAnalyseView(email: email, limitAnalysen: limitAnalysen, limits: limits)) {
                                                     ZStack {
                                                         Circle()
                                                             .foregroundColor(Color.red)
@@ -343,7 +399,7 @@ struct LoggedInView: View {
                         fetchAktivitaeten()
                         fetchLimits()
                         fetchBenutzer()
-                        fetchTargets()                    
+                        fetchTargets()
                     }
                     .navigationBarTitle(Text("Übersicht"), displayMode: .inline)
                 }
