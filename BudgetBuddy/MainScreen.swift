@@ -315,7 +315,7 @@ struct LoggedInView: View {
                                                 }
                                             }
                                             if let user = user {
-                                                NavigationLink(destination: LimitAnalyseView(email: email, limitAnalysen: limitAnalysen, limits: limits)) {
+                                                NavigationLink(destination: AddLimitView(email:email, benutzer:user)) {
                                                     ZStack {
                                                         Circle()
                                                             .foregroundColor(Color.red)
@@ -1012,42 +1012,48 @@ struct LoggedInView: View {
         return summeEinnahmen
     }
     
-    func getComparisonText( value: Double, isIncome: Bool) -> some View {
+    func getComparisonText(value: Double, isIncome: Bool) -> some View {
         let formattedValue = String(format: "%.2f", value)
+        let title: String
+        let color: Color
         
-        return HStack{
-            if(isIncome){
-                if(value>=(-100)){
-                    Text("Einnahmen: \(formattedValue)%")
-                    .foregroundColor(.green)
-                    Spacer()
-                    getArrowView(for: value,art: "Einnahmen")
-                }else{
-                    HStack{
-                        Text("Einnahmen:")
-                            .foregroundColor(.green)
-                        Text("keine Vergleichsdaten")
-                    }
-                    Spacer()
-                }
-            }else{
-                if(value>=(-100)){
-                    Text("Ausgaben: \(formattedValue)%")
-                        .foregroundColor(.red)
-                    Spacer()
-                    getArrowView(for: value,art: "Ausgaben")
-                }else{
-                    HStack{
-                        Text("Ausgaben:")
-                            .foregroundColor(.red)
-                        Text("keine Vergleichsdaten")
-                    }
+        if isIncome {
+            title = "Einnahmen"
+            color = .green
+        } else {
+            title = "Ausgaben"
+            color = .red
+        }
+        
+        return HStack {
+            if value >= -100 {
+                Text("\(title): \(formattedValue)%")
+                    .foregroundColor(color)
+                    .fontWeight(.semibold)
+                    .font(.headline)
+                Spacer()
+                getArrowView(for: value, art: title)
+            } else {
+                HStack {
+                    Text("\(title):")
+                        .foregroundColor(color)
+                        .fontWeight(.semibold)
+                        .font(.headline)
+                    Text("keine Vergleichsdaten")
+                        .foregroundColor(.gray)
                     Spacer()
                 }
             }
         }
-        .padding(.horizontal, 4)
+        .padding(.vertical, 10)
+        .padding(.horizontal, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(colorScheme == .light ? Color.white : Color.black)
+                .shadow(color: .gray, radius: 2, x: 0, y: 2)
+        )
     }
+
     
     func getArrowView(for value: Double, art: String) -> some View {
         if value > 120 {

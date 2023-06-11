@@ -24,7 +24,7 @@ struct LimitView: View {
     var body: some View {
         ZStack {
             VStack{
-                Text("Limits")
+                Text("Limits bearbeiten")
                     .font(.title)
                     .fontWeight(.bold)
                     .padding(.top, 20)
@@ -79,17 +79,11 @@ struct LimitView: View {
             }
             // HInzufügen eines Limits mit Button an oberer rechter Seite
             .navigationBarItems(trailing:
-                Button(action: {
-                    isPresentingAddLimitView.toggle()
-                }) {
+                    NavigationLink(destination: AddLimitView(email:email, benutzer:benutzer)) {
                     Text("Hinzufügen")
                 }
-                .sheet(isPresented: $isPresentingAddLimitView) {
-                    AddLimitView(email: email, benutzer: benutzer, isPresentingAddLimitView: $isPresentingAddLimitView, onDismiss: {
-                        fetchLimits()
-                    })
-                }
             )
+            .navigationBarTitle("Limits")
             .onAppear {
                 fetchLimits()
             }
@@ -152,8 +146,8 @@ struct LimitView: View {
 struct AddLimitView: View {
     let email: String
     let benutzer: Benutzer
-    let isPresentingAddLimitView: Binding<Bool>
-    let onDismiss: () -> Void
+    
+    @Environment(\.presentationMode) var presentationMode
     
     let kategorien = ["Lebensmittel", "Finanzen", "Freizeit", "Unterhaltung", "Hobbys", "Wohnen", "Haushalt", "Technik", "Shopping", "Restaurant", "Drogerie", "Sonstiges"]
     
@@ -161,37 +155,40 @@ struct AddLimitView: View {
     @State var betrag: String = ""
     
     var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("Kategorie")) {
-                    Picker("Kategorie", selection: $selectedKategorie) {
-                        ForEach(kategorien, id: \.self) { kategorie in
-                            Text(kategorie)
-                        }
-                    }
-                    .pickerStyle(MenuPickerStyle())
-                    .padding(.leading, 16)
-                }
+        ZStack{
+            VStack {
+                Text("Limits hinzufügen")
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .padding(.top, 20)
                 
-                Section(header: Text("Betrag")) {
-                           TextField("0.00", text: Binding(
-                               get: { self.betrag },
-                               set: { newValue in
-                                   self.betrag = newValue.replacingOccurrences(of: ",", with: ".")
-                               })
-                           )
-                           .keyboardType(.decimalPad)
+                Form {                
+                    Section(header: Text("Kategorie")) {
+                        Picker("Kategorie", selection: $selectedKategorie) {
+                            ForEach(kategorien, id: \.self) { kategorie in
+                                Text(kategorie)
+                            }
+                        }
+                        .pickerStyle(MenuPickerStyle())
+                        .padding(.leading, 16)
+                    }
+                    
+                    Section(header: Text("Betrag")) {
+                        TextField("0.00", text: Binding(
+                            get: { self.betrag },
+                            set: { newValue in
+                                self.betrag = newValue.replacingOccurrences(of: ",", with: ".")
+                            })
+                        )
+                        .keyboardType(.decimalPad)
+                    }
                 }
-            }
-            .navigationBarTitle("Limit hinzufügen")
-            .navigationBarItems(trailing: Button(action: {
-                saveLimit()
-                isPresentingAddLimitView.wrappedValue = false
-            }) {
-                Text("Hinzufügen")
-            })
-            .onDisappear {
-                onDismiss()
+                .navigationBarItems(trailing: Button(action: {
+                    saveLimit()
+                    presentationMode.wrappedValue.dismiss()
+                }) {
+                    Text("Hinzufügen")
+                })
             }
         }
     }
