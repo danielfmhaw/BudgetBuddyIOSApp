@@ -241,6 +241,7 @@ struct ContentView: View {
             }
         }.resume()
 
+
         semaphore.wait()
 
         return success

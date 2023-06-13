@@ -167,6 +167,7 @@ struct LoggedInView: View {
                                     }
                                     
                                     if !kategorienausgaben.isEmpty {
+                                        Divider()
                                         let filteredSortedKategorien = kategorienausgaben.filter { $0.einnahmen != 0 }.sorted { $0.einnahmen > $1.einnahmen }
                                         
                                         let endIndex = min(filteredSortedKategorien.count, 4)
@@ -174,32 +175,49 @@ struct LoggedInView: View {
                                         if endIndex > 1 {
                                             let gesamt = filteredSortedKategorien[0].einnahmen
                                             
-                                            ForEach(1..<endIndex, id: \.self) { index in
-                                                let kategorie = filteredSortedKategorien[index]
-                                                let prozentualerAnteil = kategorie.einnahmen / gesamt
+                                            HStack() {
+                                                Spacer()
                                                 
-                                                HStack {
-                                                    Text("\(index). \(kategorie.id)")
-                                                        .font(.subheadline)
-                                                        .foregroundColor(colorScheme == .dark ? Color.white : Color.black)
+                                                ForEach(1..<endIndex, id: \.self) { index in
+                                                    let kategorie = filteredSortedKategorien[index]
+                                                    let prozentualerAnteil = kategorie.einnahmen / gesamt
                                                     
-                                                    Spacer()
-                                                    
-                                                    Text("\(String(format: "%.2f", kategorie.einnahmen)) €")
-                                                        .font(.subheadline)
-                                                        .foregroundColor(.red)
+                                                    VStack {
+                                                        Text(kategorie.id)
+                                                            .font(.subheadline)
+                                                            .foregroundColor(colorScheme == .dark ? .white : .black)
+                                                        
+                                                        ZStack {
+                                                            Circle()
+                                                                .frame(width: 60, height: 60)
+                                                                .foregroundColor(colorScheme == .light ? Color.white : Color.black)
+                                                                .overlay(
+                                                                    Circle()
+                                                                        .stroke(Color.red, lineWidth: 2)
+                                                                )
+                                                            
+                                                            Image(systemName: categoryIcon(for: kategorie.id))
+                                                                .font(.system(size: 24))
+                                                                .foregroundColor(.red)
+                                                            
+                                                            
+                                                            Circle()
+                                                                .trim(from: 0, to: CGFloat(prozentualerAnteil))
+                                                                .stroke(Color.red, lineWidth: 5)
+                                                                .frame(width: 60, height: 60)
+                                                                .rotationEffect(.degrees(-90))
+                                                        }
+                                                        .padding(.horizontal,20)
+                                                        
+                                                        Text("\(String(format: "%0.0f", kategorie.einnahmen))€")
+                                                            .font(.subheadline)
+                                                            .foregroundColor(.red)
+                                                            .lineLimit(1)
+                                                            .minimumScaleFactor(0.5)
+                                                    }
                                                 }
                                                 
-                                                ZStack(alignment: .leading) {
-                                                    Rectangle()
-                                                        .frame(height: 8)
-                                                        .foregroundColor(.gray)
-                                                    
-                                                    Rectangle()
-                                                        .frame(width: CGFloat(prozentualerAnteil) * UIScreen.main.bounds.width, height: 8)
-                                                        .foregroundColor(.red)
-                                                }
-                                                .cornerRadius(4)
+                                                Spacer()
                                             }
                                         }
                                     }
@@ -397,7 +415,6 @@ struct LoggedInView: View {
                     }
                     .onAppear {
                         fetchAktivitaeten()
-                        fetchLimits()
                         fetchBenutzer()
                         fetchTargets()
                     }
@@ -410,7 +427,6 @@ struct LoggedInView: View {
             }
             .onAppear {
                 fetchAktivitaeten()
-                fetchLimits()
                 fetchBenutzer()
                 fetchTargets()
             }
@@ -820,6 +836,7 @@ struct LoggedInView: View {
                         }
                     }
                     fetchActivityByCategory()
+                    fetchLimits()
                 }
             } else {
                 print("Invalid response from server")
