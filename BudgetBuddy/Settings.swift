@@ -74,7 +74,7 @@ struct BenutzerView: View {
     
     
     func getBenutzer() {
-        guard let url = URL(string: "http://localhost:8080/api/v1/benutzer/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/benutzer/\(email)?username=admin&password=password") else {
             return
         }
         
@@ -214,7 +214,7 @@ struct BenutzerEditView: View {
             benutzer.lieblingsGegenstand = editedValue
         }
         
-        guard let url = URL(string: "http://localhost:8080/api/v1/benutzer?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/benutzer?username=admin&password=password") else {
             return
         }
         

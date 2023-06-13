@@ -92,7 +92,7 @@ struct LimitView: View {
 
     //Bekommt die Limits aus dem Backend
     func fetchLimits() {
-        guard let url = URL(string: "http://localhost:8080/api/v1/limit/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/limit/\(email)?username=admin&password=password") else {
             print("Invalid URL")
             return
         }
@@ -112,7 +112,7 @@ struct LimitView: View {
     
     //Löscht das Limit im Backend
     func deleteLimit(id: Int) {
-        guard let url = URL(string: "http://localhost:8080/api/v1/limit/\(id)?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/limit/\(id)?username=admin&password=password") else {
             print("Ungültige URL")
             return
         }
@@ -198,7 +198,7 @@ struct AddLimitView: View {
         let betragDouble = Double(betrag)
         let newLimit = Limit(id: 0,kategorie: selectedKategorie,benutzer: benutzer, betrag: betragDouble ?? 0)
         
-        guard let url = URL(string: "http://localhost:8080/api/v1/limit/?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/limit/?username=admin&password=password") else {
             print("Invalid URL")
             return
         }
@@ -274,7 +274,7 @@ struct EditLimitView: View {
         let betragDouble = Double(betrag)
         let updatedLimit = Limit(id: limit.id, kategorie: limit.kategorie, benutzer: benutzer, betrag: betragDouble ?? 0)
         
-        guard let url = URL(string: "http://localhost:8080/api/v1/limit/?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/limit/?username=admin&password=password") else {
             print("Invalid URL")
             return
         }

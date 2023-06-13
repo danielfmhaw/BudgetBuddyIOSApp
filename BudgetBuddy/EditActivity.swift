@@ -162,7 +162,7 @@ struct EditActivityView: View {
 
     // Bekommt die Targets aus dem Backend
     func fetchTargets(email: String) {
-        guard let url = URL(string: "http://localhost:8080/api/v1/targets/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/targets/\(email)?username=admin&password=password") else {
             print("Invalid URL")
             return
         }
@@ -197,7 +197,7 @@ struct EditActivityView: View {
     
     //Aktivtät updaten (per PUT)
     func saveActivity(_ activity: Aktivitaet) {
-        guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/aktivitaet?username=admin&password=password") else {
             print("Invalid URL")
             return
         }

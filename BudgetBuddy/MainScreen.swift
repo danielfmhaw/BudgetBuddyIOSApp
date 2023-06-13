@@ -715,7 +715,7 @@ struct LoggedInView: View {
     
     //Löscht die Aktivität im Backend
     func deleteAktivitaet(id: Int) {
-        guard let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/\(id)?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/aktivitaet/\(id)?username=admin&password=password") else {
             print("Ungültige URL")
             return
         }
@@ -745,7 +745,7 @@ struct LoggedInView: View {
 
     //Bekommt die Benutzerdaten aus dem Backend
     func fetchBenutzer() {
-        guard let url = URL(string: "http://localhost:8080/api/v1/benutzer/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/benutzer/\(email)?username=admin&password=password") else {
             return
         }
         
@@ -767,7 +767,7 @@ struct LoggedInView: View {
     
     //Bekommt die Aktivitäten aus dem Backend
     func fetchAktivitaeten() {
-        let url = URL(string: "http://localhost:8080/api/v1/aktivitaet/\(email)?username=admin&password=password")
+        let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/aktivitaet/\(email)?username=admin&password=password")
 
         guard let requestURL = url else {
             print("Invalid URL")
@@ -893,7 +893,7 @@ struct LoggedInView: View {
     
     // Bekommt alle Limits aus dem Backend für den jeweiligen Benutzer (-email)
     private func fetchLimits() {
-        guard let url = URL(string: "http://localhost:8080/api/v1/limit/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/limit/\(email)?username=admin&password=password") else {
             print("Invalid URL")
             return
         }
@@ -947,7 +947,7 @@ struct LoggedInView: View {
     
     //Bekommt die Targets aus dem Backend
     func fetchTargets() {
-        guard let url = URL(string: "http://localhost:8080/api/v1/targets/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/targets/\(email)?username=admin&password=password") else {
             print("Invalid URL")
             return
         }
