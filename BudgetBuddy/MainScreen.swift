@@ -89,7 +89,16 @@ struct LoggedInView: View {
 
                                     if !kategorieneinnahmen.isEmpty {
                                         Divider()
-                                        let filteredSortedKategorien = kategorieneinnahmen.filter { $0.einnahmen != 0 }.sorted { $0.einnahmen > $1.einnahmen }
+                                        let filteredSortedKategorien = kategorieneinnahmen.filter { $0.einnahmen != 0 }.sorted { kategorie1, kategorie2 in
+                                            if kategorie1.id == "Gesamt" {
+                                                return true
+                                            } else if kategorie2.id == "Gesamt" {
+                                                return false
+                                            } else {
+                                                return kategorie1.einnahmen > kategorie2.einnahmen
+                                            }
+                                        }
+
                                         
                                         let endIndex = min(filteredSortedKategorien.count, 4)
                                         
@@ -168,7 +177,15 @@ struct LoggedInView: View {
                                     
                                     if !kategorienausgaben.isEmpty {
                                         Divider()
-                                        let filteredSortedKategorien = kategorienausgaben.filter { $0.einnahmen != 0 }.sorted { $0.einnahmen > $1.einnahmen }
+                                        let filteredSortedKategorien = kategorienausgaben.filter { $0.einnahmen != 0 }.sorted { kategorie1, kategorie2 in
+                                            if kategorie1.id == "Gesamt" {
+                                                return true
+                                            } else if kategorie2.id == "Gesamt" {
+                                                return false
+                                            } else {
+                                                return kategorie1.einnahmen > kategorie2.einnahmen
+                                            }
+                                        }
                                         
                                         let endIndex = min(filteredSortedKategorien.count, 4)
                                         
@@ -472,7 +489,10 @@ struct LoggedInView: View {
                             .filter { sucheEinnahmen.isEmpty ? true : $0.beschreibung.localizedCaseInsensitiveContains(sucheEinnahmen) }
                             .sorted(by: soriertenEinnahmen == .ascending ? { $0.datum < $1.datum } : { $0.datum > $1.datum })
                                         .enumerated()), id: \.element.id) { index, aktivitaet in
-                            NavigationLink(destination: EditActivityView(activity: aktivitaet)){
+                            NavigationLink(destination: EditActivityView(activity: aktivitaet)
+                                                .onDisappear {
+                                                    fetchAktivitaeten()
+                                                }){
                                 HStack {
                                     VStack(alignment: .leading, spacing: 10) {
                                         Text("\(aktivitaet.beschreibung)")
@@ -528,7 +548,10 @@ struct LoggedInView: View {
                 }
                 .navigationBarTitle(Text("Übersicht"), displayMode: .inline)
                 .navigationBarItems(trailing:
-                        NavigationLink(destination: AddNewActivityView(user: user, actart: "Einnahmen",targets:targets)) {
+                    NavigationLink(destination: AddNewActivityView(user: user, actart: "Einnahmen", targets: targets)
+                                    .onDisappear {
+                                        fetchAktivitaeten()
+                                    }) {
                         Text("Hinzufügen")
                     }
                 )
@@ -584,7 +607,10 @@ struct LoggedInView: View {
                                         .filter { sucheAusgaben.isEmpty ? true : $0.beschreibung.localizedCaseInsensitiveContains(sucheAusgaben) }
                                         .sorted(by: soriertenAusgaben == .ascending ? { $0.datum < $1.datum } : { $0.datum > $1.datum })
                                         .enumerated()), id: \.element.id) { index, aktivitaet in
-                            NavigationLink(destination: EditActivityView(activity: aktivitaet)){
+                                NavigationLink(destination: EditActivityView(activity: aktivitaet)
+                                                    .onDisappear {
+                                                        fetchAktivitaeten()
+                                                    }){
                                 HStack {
                                     VStack(alignment: .leading, spacing: 10) {
                                         Text("\(aktivitaet.beschreibung)")
@@ -638,12 +664,14 @@ struct LoggedInView: View {
                     
                     Spacer()
                 }
-                .navigationBarTitle(Text("Übersicht"), displayMode: .inline)
-                    .navigationBarItems(trailing:
-                            NavigationLink(destination: AddNewActivityView(user: user, actart: "Ausgaben",targets:targets)) {
-                            Text("Hinzufügen")
-                        }
-                    )
+                .navigationBarItems(trailing:
+                    NavigationLink(destination: AddNewActivityView(user: user, actart: "Ausgaben", targets: targets)
+                                    .onDisappear {
+                                        fetchAktivitaeten()
+                                    }) {
+                        Text("Hinzufügen")
+                    }
+                )
                 .onAppear() {
                     fetchAktivitaeten()
                     fetchBenutzer()
@@ -652,6 +680,10 @@ struct LoggedInView: View {
             .tabItem{
                 Image(systemName: "eurosign.square.fill")
                 Text("Ausgaben")
+            }
+            .onAppear() {
+                fetchAktivitaeten()
+                fetchBenutzer()
             }
             
             
@@ -820,6 +852,7 @@ struct LoggedInView: View {
                     self.aktivitaeten.append(contentsOf: updatedAktivitaeten)
 
                     // Aktualisierung der Summen (nur für hinzugefügte Aktivitäten)
+                    aktivitaetenSummen = []
                     aktivitaetenSummen.append(contentsOf: getYearSum(art: "Einnahmen", aktivitaeten: aktivitaeten))
                     aktivitaetenSummen.append(contentsOf: getYearSum(art: "Ausgaben", aktivitaeten: aktivitaeten))
                     aktivitaetenSummen.append(contentsOf: getMonthSum(art: "Einnahmen", aktivitaeten: aktivitaeten))
@@ -1073,10 +1106,10 @@ struct LoggedInView: View {
 
     
     func getArrowView(for value: Double, art: String) -> some View {
-        if value > 120 {
+        if value > 20 {
             return AnyView(Image(systemName: "arrow.up.right")
                 .foregroundColor(art == "Einnahmen" ? .green : .red))
-        } else if (value >= 80 && value <= 120) {
+        } else if (value >= -20 && value <= 20) {
             return AnyView(Image(systemName: "arrow.right")
                 .foregroundColor(colorScheme == .dark ? .white : .black))
         } else {
