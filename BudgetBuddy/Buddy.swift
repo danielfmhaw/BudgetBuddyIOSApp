@@ -3,6 +3,7 @@
 // Created by Daniel Mendes on 09.05.23.
 
 import SwiftUI
+import Foundation
 import Charts
 
 struct Buddy: View {
@@ -105,6 +106,7 @@ struct Buddy: View {
      
     // Messages werden im Chat angezeigt (je nach Benutzereingabe unterschiedliche Antworten)
     func sendMessage(_ message: String) {
+        var alles:String = ""
         messagesBenutzer.append(message)
         if message.lowercased() == "hallo" || message.lowercased() == "hi" {
             messagesComp.append("Was kann ich für dich tun?")
@@ -114,7 +116,6 @@ struct Buddy: View {
             messagesComp.append("Es gibt folgende Befehle: \r\n1. Limitüberschreitungen mit 'Limit' anzeigen lassen \r\n2. Große Einnahmenquellen anzeigen lassen mit 'Einnahmen' und \r\n3. Alles große Ausgabeposten anzeigen lassen")
         }else if message.lowercased().contains("einna"){
             let einnahmenMessages = getBudgetInformation(art: "Einnahmen")
-            var alles: String = ""
             for (index, message) in einnahmenMessages.enumerated() {
                 alles += "• " + message
                 if index < einnahmenMessages.count - 1 {
@@ -124,7 +125,6 @@ struct Buddy: View {
             messagesComp.append(alles)
         }else if message.lowercased().contains("ausg"){
             let ausgabenMessages = getBudgetInformation(art:"Ausgaben")
-            var alles: String = ""
             for (index, message) in ausgabenMessages.enumerated() {
                 alles += "• " + message
                 if index < ausgabenMessages.count - 1 {
@@ -134,7 +134,6 @@ struct Buddy: View {
             messagesComp.append(alles)
         }else if message.lowercased().contains("lim"){
             let limitMessages = getLimitInformation()
-            var alles:String = ""
             for (index, limitMessage) in limitMessages.enumerated() {
                 alles += limitMessage
                 if index < limitMessages.count - 1 {
@@ -143,7 +142,7 @@ struct Buddy: View {
             }
             messagesComp.append(alles)
         } else {
-            messagesComp.append("Entschuldigung, ich kann nichts mit der Nachricht: \(message) anfangen.\r\nNutze 'Befehle' für nähere Infos.")
+            messagesComp.append(getMessageFromAPI(anfrage:message))
 
         }
     }
@@ -219,5 +218,46 @@ struct Buddy: View {
         let aktivitaetenInKategorie = aktivitaetenAusgaben.filter { $0.kategorie == kategorie }
         let betragSumme = aktivitaetenInKategorie.reduce(0) { $0 + $1.betrag }
         return betragSumme
+    }
+
+    func getMessageFromAPI(anfrage: String) -> String {
+        let urlString = "https://plebgpt.onrender.com/chat/\(anfrage)"
+        guard let url = URL(string: urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "") else {
+            return "Ungültige URL"
+        }
+        
+        let username = "daniel"
+        let password = "dhawbb"
+        
+        let loginString = "\(username):\(password)"
+        guard let loginData = loginString.data(using: .utf8) else {
+            return "Fehler bei der Erstellung des Login-Datenobjekts"
+        }
+        let base64LoginString = loginData.base64EncodedString()
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Basic \(base64LoginString)", forHTTPHeaderField: "Authorization")
+        
+        var responseString = "Leere oder ungültige Serverantwort"
+        
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        let task = URLSession.shared.dataTask(with: request) { (data, response, error) in
+            if let error = error {
+                responseString = "Fehler: \(error)"
+            }
+            
+            if let data = data, let string = String(data: data, encoding: .utf8) {
+                responseString = string
+            }
+            
+            semaphore.signal()
+        }
+        
+        task.resume()
+        semaphore.wait()
+        
+        return responseString
     }
 }

@@ -427,7 +427,7 @@ struct LoggedInView: View {
                             Spacer()
                         }
                         .padding()
-                        .navigationBarTitle(Text("Übersicht"), displayMode: .inline)
+                        .navigationBarTitle(Text("Dashboard"), displayMode: .inline)
                         
                     }
                     .onAppear {
@@ -664,6 +664,7 @@ struct LoggedInView: View {
                     
                     Spacer()
                 }
+                .navigationBarTitle(Text("Übersicht"), displayMode: .inline)
                 .navigationBarItems(trailing:
                     NavigationLink(destination: AddNewActivityView(user: user, actart: "Ausgaben", targets: targets)
                                     .onDisappear {
@@ -1026,7 +1027,7 @@ struct LoggedInView: View {
     func categoryIcon(for category: String) -> String {
         switch category {
         case "Drogerie":
-            return "cart"
+            return "shower"
         case "Freizeit":
             return "film"
         case "Unterhaltung":

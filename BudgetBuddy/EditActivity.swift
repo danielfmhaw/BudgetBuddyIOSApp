@@ -162,6 +162,7 @@ struct EditActivityView: View {
 
     // Bekommt die Targets aus dem Backend
     func fetchTargets(email: String) {
+        beschreibungTargets = []
         guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/targets/\(email)?username=admin&password=password") else {
             print("Invalid URL")
             return
