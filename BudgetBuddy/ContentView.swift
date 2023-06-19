@@ -192,7 +192,7 @@ struct ContentView: View {
     }
     
     func authenticate() -> Bool {
-        let urlString = "https://budgetbuddyback.fly.dev/api/v1/benutzer/\(email)?username=admin&password=password"
+        let urlString = "https://budgetbuddybackweb.fly.dev/api/v1/benutzer/\(email)?username=admin&password=password"
         guard let url = URL(string: urlString) else {
             print("Invalid URL")
             return false
@@ -350,7 +350,7 @@ struct PasswortUpdate:View{
     
     // Zieht den Benuter aus dem Backend
     func fetchBenutzer(email:String) {
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/benutzer/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddybackweb.fly.dev/api/v1/benutzer/\(email)?username=admin&password=password") else {
             print("Ungültige URL")
             return
         }
@@ -383,7 +383,7 @@ struct PasswortUpdate:View{
     func updateBenutzer() {
         benutzer?.password=confirmPassword
         
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/benutzer?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddybackweb.fly.dev/api/v1/benutzer?username=admin&password=password") else {
             return
         }
         

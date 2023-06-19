@@ -101,7 +101,7 @@ struct SavingsTarget: View {
 
     //Bekommt die Targets aus dem Backend
     func fetchTargets() {
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/targets/\(email)?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddybackweb.fly.dev/api/v1/targets/\(email)?username=admin&password=password") else {
             print("Invalid URL")
             return
         }
@@ -121,7 +121,7 @@ struct SavingsTarget: View {
     
     //Löscht das Target im Backend
     func deleteTarget(id: Int) {
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/targets/\(id)?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddybackweb.fly.dev/api/v1/targets/\(id)?username=admin&password=password") else {
             print("Ungültige URL")
             return
         }
@@ -196,7 +196,7 @@ struct AddSavingsTarget: View {
         let betragDouble = Double(betrag)
         let newTarget = Target(id: 0,targetname: targetname ,benutzer: benutzer, zielbetrag: betragDouble ?? 0, aktbetrag: 0)
         
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/targets/?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddybackweb.fly.dev/api/v1/targets/?username=admin&password=password") else {
             print("Invalid URL")
             return
         }
@@ -277,7 +277,7 @@ struct EditSavingsTarget: View {
         let betragDouble = Double(betrag)
         let updatedTarget = Target(id: target.id, targetname: targetname, benutzer: benutzer, zielbetrag: betragDouble ?? 0,aktbetrag: 0)
         
-        guard let url = URL(string: "https://budgetbuddyback.fly.dev/api/v1/targets/?username=admin&password=password") else {
+        guard let url = URL(string: "https://budgetbuddybackweb.fly.dev/api/v1/targets/?username=admin&password=password") else {
             print("Invalid URL")
             return
         }
