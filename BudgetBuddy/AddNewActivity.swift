@@ -16,7 +16,7 @@ struct AddNewActivityView: View {
     @State var selectedDisplayMode = 0
 
     @State private var selectedKategorie = "Lebensmittel"
-    let kategorien = ["Lebensmittel","Finanzen","Freizeit","Unterhaltung","Hobbys","Wohnen","Haushalt","Technik","Shopping","Restaurant","Drogerie","Sonstiges"]
+    let kategorien = ["Lebensmittel","Finanzen","Freizeit","Unterhaltung","Hobbys","Wohnen","Haushalt","Technik","Shopping","Restaurant","Drogerie","Mobilität","Sonstiges"]
     @State private var selectedTarget = ""
     @State var beschreibungTargets: [String] = []
     @State var datum = Date()

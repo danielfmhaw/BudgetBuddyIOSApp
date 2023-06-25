@@ -12,7 +12,7 @@ struct EditActivityView: View {
     @State var beschreibung: String
     @State var datum: Date
     @State private var selectedKategorie : String
-    let kategorien = ["Lebensmittel","Finanzen","Freizeit","Unterhaltung","Hobbys","Wohnen","Haushalt","Technik","Shopping","Restaurant","Drogerie","Sonstiges"]
+    let kategorien = ["Lebensmittel","Finanzen","Freizeit","Unterhaltung","Hobbys","Wohnen","Haushalt","Technik","Shopping","Restaurant","Drogerie","Mobilität","Sonstiges"]
     @Environment(\.presentationMode) var presentationMode
     
     @State var targets: [Target] = []

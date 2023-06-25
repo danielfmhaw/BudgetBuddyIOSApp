@@ -190,19 +190,19 @@ struct Kreisdiagramm: View {
 
 
     func symbolForOption(_ option: String) -> String {
-        switch option {
-        case "Gesamt":
-            return "line.horizontal.3.decrease.circle"
-        case "Letztes Jahr":
-            return "calendar"
-        case "Letzter Monat":
-            return "calendar.circle"
-        case "Letzte Woche":
-            return "clock"
-        default:
-            return ""
+            switch option {
+            case "Gesamt":
+                return "line.3.horizontal.circle" //line.horizontal.3.decrease.circle
+            case "Letztes Jahr":
+                return "j.square.fill" //calendar
+            case "Letzter Monat":
+                return "m.square.fill" //calendar.circle
+            case "Letzte Woche":
+                return "w.square.fill" //clock
+            default:
+                return ""
+            }
         }
-    }
     
     // Berechnet die Einnahmen von allen Kategorien der ausgwählten Art
     private func calculateTotalEinnahmen() -> Double {

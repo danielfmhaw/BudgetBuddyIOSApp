@@ -190,13 +190,13 @@ struct LimitAnalyseView: View {
     func symbolForOption(_ option: String) -> String {
             switch option {
             case "Gesamt":
-                return "line.horizontal.3.decrease.circle"
+                return "line.3.horizontal.circle"
             case "Letztes Jahr":
-                return "calendar"
+                return "j.square.fill"
             case "Letzter Monat":
-                return "calendar.circle"
+                return "m.square.fill"
             case "Letzte Woche":
-                return "clock"
+                return "w.square.fill"
             default:
                 return ""
             }
