@@ -9,6 +9,8 @@ import SwiftUI
 struct LoggedInView: View {
     var email: String
     var logoutAction: () -> Void
+    
+    let berechnungen = Berechnungen()
 
     @State private var aktivitaeten: [Aktivitaet] = []
     @State private var showNewActivityView = false
@@ -73,7 +75,7 @@ struct LoggedInView: View {
                         }.padding()
                         
                         VStack(alignment: .leading) {
-                            NavigationLink(destination: Kreisdiagramm(kategorien: kategorieneinnahmen, art: "Einnahmen", email: email)) {
+                            NavigationLink(destination: Kreisdiagramm(kategorien: kategorieneinnahmen, art: "Einnahmen", email: email,aktivitaeten:aktivitaeten)) {
                                 VStack(alignment: .leading) {
                                     HStack(spacing: 8) {
                                         Image(systemName: "eurosign.circle.fill")
@@ -161,7 +163,7 @@ struct LoggedInView: View {
                                 )
                                 .shadow(color: .gray, radius: 1, x: 0, y: 1)
                             }
-                            NavigationLink(destination: Kreisdiagramm(kategorien: kategorienausgaben, art: "Ausgaben", email: email)) {
+                            NavigationLink(destination: Kreisdiagramm(kategorien: kategorienausgaben, art: "Ausgaben", email: email,aktivitaeten:aktivitaeten)) {
                                 VStack(alignment: .leading) {
                                     HStack(spacing: 8) {
                                         Image(systemName: "eurosign.square.fill")
@@ -300,7 +302,7 @@ struct LoggedInView: View {
                             .shadow(color: .gray, radius: 2, x: 0, y: 2)
                             VStack(alignment: .leading){
                                 HStack{
-                                    NavigationLink(destination: LimitAnalyseView(email: email, limitAnalysen: limitAnalysen, limits: limits)) {
+                                    NavigationLink(destination: LimitAnalyseView(email: email, limitAnalysen: limitAnalysen, limits: limits,aktivitaeten:aktivitaeten)) {
                                         HStack {
                                             Image(systemName: "chart.bar.doc.horizontal.fill")
                                                 .resizable()
@@ -318,7 +320,7 @@ struct LoggedInView: View {
                                             Text("Bearbeiten")
                                         }
                                     }
-                                    NavigationLink(destination: LimitAnalyseView(email: email, limitAnalysen: limitAnalysen, limits: limits)) {
+                                    NavigationLink(destination: LimitAnalyseView(email: email, limitAnalysen: limitAnalysen, limits: limits,aktivitaeten:aktivitaeten)) {
                                         Image(systemName: "chevron.right")
                                             .foregroundColor(.primary)
                                             .padding(.trailing, 8)
@@ -326,7 +328,7 @@ struct LoggedInView: View {
                                 }
                                 Divider()
                                 HStack {
-                                    NavigationLink(destination: LimitAnalyseView(email: email, limitAnalysen: limitAnalysen, limits: limits)) {
+                                    NavigationLink(destination: LimitAnalyseView(email: email, limitAnalysen: limitAnalysen, limits: limits,aktivitaeten:aktivitaeten)) {
                                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())],spacing: 8) {
                                             ForEach(limits, id: \.id) { limit in
                                                 if let limitAnalyse = limitAnalysen.first(where: { $0.kategorie == limit.kategorie }) {
@@ -869,7 +871,8 @@ struct LoggedInView: View {
                             self.aktivitaeten.remove(at: index)
                         }
                     }
-                    fetchActivityByCategory()
+                    self.kategorieneinnahmen = berechnungen.fetchActivityByCategory(art: "Einnahmen",aktivitaeten: aktivitaeten)
+                    self.kategorienausgaben = berechnungen.fetchActivityByCategory(art: "Ausgaben",aktivitaeten: aktivitaeten)
                     fetchLimits()
                 }
             } else {
@@ -877,71 +880,7 @@ struct LoggedInView: View {
             }
         }.resume()
     }
-    
-    
-    //Bekommt die Einnahmen oder Ausgaben (Entscheidung über art:String) von einem Benutzer (email) zu einer möglichen Kategorie
-    // Bekommt die Einnahmen oder Ausgaben (Entscheidung über art:String) von einem Benutzer (email) zu einer möglichen Kategorie
-    private func fetchActivityByCategory() {
-        let kategorien = ["Drogerie", "Freizeit", "Unterhaltung", "Lebensmittel", "Hobbys", "Wohnen", "Haushalt", "Sonstiges", "Technik", "Finanzen", "Restaurant", "Shopping"]
-        var gesamtEinnahmen: Double = 0
-        var gesamtAusgaben: Double = 0
-        
-        let dispatchGroup = DispatchGroup() // Erstelle eine neue DispatchGroup
-        
-        for kategorie in kategorien {
-            dispatchGroup.enter()
-            DispatchQueue.global().async {
-                let einnahmen = self.aktivitaeten
-                    .filter { $0.kategorie == kategorie && $0.art == "Einnahmen" }
-                    .reduce(0) { $0 + $1.betrag }
-                
-                DispatchQueue.main.async {
-                    if let existingKategorieIndex = self.kategorieneinnahmen.firstIndex(where: { $0.id == kategorie }) {
-                        self.kategorieneinnahmen[existingKategorieIndex].einnahmen = einnahmen
-                    } else {
-                        self.kategorieneinnahmen.append(Kategorie(id: kategorie, einnahmen: einnahmen))
-                    }
-                    gesamtEinnahmen += einnahmen
-                }
-                
-                dispatchGroup.leave()
-            }
-            
-            dispatchGroup.enter()
-            DispatchQueue.global().async {
-                let ausgaben = self.aktivitaeten
-                    .filter { $0.kategorie == kategorie && $0.art == "Ausgaben" }
-                    .reduce(0) { $0 + $1.betrag }
-                
-                DispatchQueue.main.async {
-                    if let existingKategorieIndex = self.kategorienausgaben.firstIndex(where: { $0.id == kategorie }) {
-                        self.kategorienausgaben[existingKategorieIndex].einnahmen = ausgaben
-                    } else {
-                        self.kategorienausgaben.append(Kategorie(id: kategorie, einnahmen: ausgaben))
-                    }
-                    gesamtAusgaben += ausgaben
-                }
-                
-                dispatchGroup.leave()
-            }
-        }
-        
-        dispatchGroup.notify(queue: .main) {
-            if let existingGesamtEinnahmenIndex = self.kategorieneinnahmen.firstIndex(where: { $0.id == "Gesamt" }) {
-                self.kategorieneinnahmen[existingGesamtEinnahmenIndex].einnahmen = gesamtEinnahmen
-            } else {
-                self.kategorieneinnahmen.append(Kategorie(id: "Gesamt", einnahmen: gesamtEinnahmen))
-            }
-            
-            if let existingGesamtAusgabenIndex = self.kategorienausgaben.firstIndex(where: { $0.id == "Gesamt" }) {
-                self.kategorienausgaben[existingGesamtAusgabenIndex].einnahmen = gesamtAusgaben
-            } else {
-                self.kategorienausgaben.append(Kategorie(id: "Gesamt", einnahmen: gesamtAusgaben))
-            }
-        }
-    }
 
-    
     // Bekommt alle Limits aus dem Backend für den jeweiligen Benutzer (-email)
     private func fetchLimits() {
         guard let url = URL(string: "https://budgetbuddybackweb.fly.dev/api/v1/limit/\(email)?username=admin&password=password") else {
@@ -974,26 +913,13 @@ struct LoggedInView: View {
                     let deletedLimitIds = existingLimitIds.filter { !decodedLimitIds.contains($0) }
                     self.limits.removeAll { deletedLimitIds.contains($0.id) }
                     
-                    createLimitAnalysen()
+                    
+                    limitAnalysen=berechnungen.createLimitAnalysen(aktivitaeten: aktivitaeten, limits: limits)
                 }
             } else {
                 print("Failed to decode response data")
             }
         }.resume()
-    }
-    
-    // Erstellt Limit-Analysen basierend auf den Limits und Aktivitäten
-    private func createLimitAnalysen() {
-        let kategorien = Set(limits.map { $0.kategorie })
-        
-        var limitAnalysen = [LimitAnalyse]()
-        for kategorie in kategorien {
-            let betragSumme = getAktivitaetenSummeInKategorie(kategorie: kategorie)
-            let limitBetrag = limits.filter { $0.kategorie == kategorie }.first?.betrag ?? 0
-            limitAnalysen.append(LimitAnalyse(kategorie: kategorie, zielbetrag: limitBetrag, aktuell: betragSumme))
-        }
-        self.limitAnalysen = limitAnalysen
-        print(limitAnalysen)
     }
     
     //Bekommt die Targets aus dem Backend
@@ -1014,13 +940,6 @@ struct LoggedInView: View {
             }
             print("Fetch failed: \(error?.localizedDescription ?? "Unknown error")")
         }.resume()
-    }
-    
-    // Summiert die Summe in der jeweiligen Kategorie auf
-    private func getAktivitaetenSummeInKategorie(kategorie: String) -> Double {
-        let aktivitaetenInKategorie = aktivitaeten.filter { $0.kategorie == kategorie && $0.art == "Ausgaben"}
-        let betragSumme = aktivitaetenInKategorie.reduce(0) { $0 + $1.betrag }
-        return betragSumme
     }
     
     // Die categoryIcon Methode, um das Symbol für eine Kategorie zurückzugeben
@@ -1121,12 +1040,11 @@ struct LoggedInView: View {
 
     
     func getYearSum(art: String, aktivitaeten: [Aktivitaet]) -> [Double] {
-        let analyseView = AnalyseView(email: email,aktivitaeten: aktivitaeten)
-        let last12activityMonths = analyseView.getXActivityMonths(art: art, aktivitaeten: aktivitaeten, anzahl: 12)
+        let last12activityMonths = berechnungen.getXActivityMonths(art: art, aktivitaeten: aktivitaeten, anzahl: 12)
         let last12 = last12activityMonths.reduce(0) { result, activity in
             return result + activity.amount
         }
-        let last24activityMonths = analyseView.getXActivityMonths(art: art, aktivitaeten: aktivitaeten, anzahl: 24)
+        let last24activityMonths = berechnungen.getXActivityMonths(art: art, aktivitaeten: aktivitaeten, anzahl: 24)
         let last24 = last24activityMonths.reduce(0) { result, activity in
             return result + activity.amount
         }
@@ -1141,12 +1059,11 @@ struct LoggedInView: View {
         return [last12,(last24-last12),diff]
     }
     func getMonthSum(art: String, aktivitaeten: [Aktivitaet]) -> [Double] {
-        let analyseView = AnalyseView(email: email,aktivitaeten: aktivitaeten)
-        let lastactivityMonths = analyseView.getXActivityMonths(art: art, aktivitaeten: aktivitaeten, anzahl: 1)
+        let lastactivityMonths = berechnungen.getXActivityMonths(art: art, aktivitaeten: aktivitaeten, anzahl: 1)
         let last = lastactivityMonths.reduce(0) { result, activity in
             return result + activity.amount
         }
-        let lastactivityMonths_2nd = analyseView.getXActivityMonths(art: art, aktivitaeten: aktivitaeten, anzahl: 2)
+        let lastactivityMonths_2nd = berechnungen.getXActivityMonths(art: art, aktivitaeten: aktivitaeten, anzahl: 2)
         let last2 = lastactivityMonths_2nd.reduce(0) { result, activity in
             return result + activity.amount
         }
@@ -1159,12 +1076,11 @@ struct LoggedInView: View {
         return [last,(last2-last),diff]
     }
     func getWeekSum(art: String, aktivitaeten: [Aktivitaet]) -> [Double] {
-        let analyseView = AnalyseView(email: email,aktivitaeten: aktivitaeten)
-        let activitieslast7 = analyseView.getActivityLastXDays(art: art, aktivitaeten: aktivitaeten, anzahl: 7)
+        let activitieslast7 = berechnungen.getActivityLastXDays(art: art, aktivitaeten: aktivitaeten, anzahl: 7)
         let last7 = activitieslast7.reduce(0) { result, activity in
             return result + activity.amount
         }
-        let activitieslast14 = analyseView.getActivityLastXDays(art: art, aktivitaeten: aktivitaeten, anzahl: 14)
+        let activitieslast14 = berechnungen.getActivityLastXDays(art: art, aktivitaeten: aktivitaeten, anzahl: 14)
         let last14 = activitieslast14.reduce(0) { result, activity in
             return result + activity.amount
         }

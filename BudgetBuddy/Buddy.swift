@@ -132,7 +132,7 @@ struct Buddy: View {
                 }
             }
             messagesComp.append(alles)
-        }else if message.lowercased().contains("lim"){
+        }else if message.lowercased().contains("limit"){
             let limitMessages = getLimitInformation()
             for (index, limitMessage) in limitMessages.enumerated() {
                 alles += limitMessage
@@ -221,7 +221,7 @@ struct Buddy: View {
     }
 
     func getMessageFromAPI(anfrage: String) -> String {
-        let urlString = "https://plebgpt.onrender.com/chat/\(anfrage)"
+        let urlString = "https://plebgpt.fly.dev/chat/\(anfrage)"
         guard let url = URL(string: urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "") else {
             return "Ungültige URL"
         }

@@ -20,16 +20,19 @@ struct LimitAnalyse: Identifiable {
 
 struct LimitAnalyseView: View {
         let email: String
-        let limitAnalysen: [LimitAnalyse]
+        @State var limitAnalysen: [LimitAnalyse]
         let limits: [Limit]
+        let aktivitaeten: [Aktivitaet]
     
        @State var showList: Bool = true
        @State private  var currentActiveItem: Item?
+       @State private var selectedOption = "Gesamt"
+
     
        @Environment(\.colorScheme) var colorScheme
 
        var body: some View {
-           NavigationView {
+           ZStack {
                VStack {
                    Text("Budget-Vergleich")
                        .font(.title)
@@ -147,8 +150,57 @@ struct LimitAnalyseView: View {
                        })
                    }
                }
+               .navigationBarItems(trailing:
+                    Menu {
+                            Button(action: {
+                                selectedOption = "Gesamt"
+                            }) {
+                                Label("Gesamt", systemImage: symbolForOption("Gesamt"))
+                            }
+
+                            Button(action: {
+                                selectedOption = "Letztes Jahr"
+                            }) {
+                                Label("Letztes Jahr", systemImage: symbolForOption("Letztes Jahr"))
+                            }
+
+                            Button(action: {
+                                selectedOption = "Letzter Monat"
+                            }) {
+                                Label("Letzter Monat", systemImage: symbolForOption("Letzter Monat"))
+                            }
+
+                            Button(action: {
+                                selectedOption = "Letzte Woche"
+                            }) {
+                                Label("Letzte Woche", systemImage: symbolForOption("Letzte Woche"))
+                            }
+                    } label: {
+                            Image(systemName: symbolForOption(selectedOption))
+                                .foregroundColor(.blue)
+                                .font(.system(size: 20))
+                    }
+               )
            }
+           .onChange(of: selectedOption) { _ in
+                   limitAnalysenAnpassen()
+               }
        }
+    
+    func symbolForOption(_ option: String) -> String {
+            switch option {
+            case "Gesamt":
+                return "line.horizontal.3.decrease.circle"
+            case "Letztes Jahr":
+                return "calendar"
+            case "Letzter Monat":
+                return "calendar.circle"
+            case "Letzte Woche":
+                return "clock"
+            default:
+                return ""
+            }
+        }
     
     // Erstellt eine Liste von Items basierend auf den Limits und Limit-Analysen
     private var items: [Item] {
@@ -166,5 +218,20 @@ struct LimitAnalyseView: View {
        let id = UUID()
        let type: String
        let value: Double
+    }
+    
+    func limitAnalysenAnpassen(){
+        let berechnungen = Berechnungen()
+        if(selectedOption=="Gesamt"){
+            limitAnalysen=berechnungen.createLimitAnalysen(aktivitaeten: aktivitaeten, limits: limits)
+        }else if(selectedOption=="Letztes Jahr"){
+            limitAnalysen=berechnungen.createLimitAnalysen(aktivitaeten: berechnungen.getXAktivitaetenMonths(art: "Ausgaben", aktivitaeten: aktivitaeten, anzahl: 12), limits: limits)
+        }else if(selectedOption=="Letzter Monat"){
+            limitAnalysen=berechnungen.createLimitAnalysen(aktivitaeten: berechnungen.getXAktivitaetenMonths(art: "Ausgaben", aktivitaeten: aktivitaeten, anzahl: 1), limits: limits)
+        }else if(selectedOption=="Letzte Woche"){
+            limitAnalysen=berechnungen.createLimitAnalysen(aktivitaeten: berechnungen.getAktivitaetenLastXDays(art: "Ausgaben", aktivitaeten: aktivitaeten, anzahl: 6), limits: limits)
+        }else{
+            limitAnalysen=[]
+        }
     }
 }

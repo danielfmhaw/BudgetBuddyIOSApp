@@ -16,6 +16,8 @@ struct AnalyseView: View {
     let email: String
     let aktivitaeten: [Aktivitaet]
     
+    let berechnungen = Berechnungen()
+    
     let dispatchGroup = DispatchGroup()
     @State private var einnahmen: [Activity] = []
     @State private var ausgaben: [Activity] = []
@@ -269,17 +271,17 @@ struct AnalyseView: View {
             einnahmen = getActivityYears(art: "Einnahmen", aktivitaeten: aktivitaeten)
             ausgaben = getActivityYears(art: "Ausgaben", aktivitaeten: aktivitaeten)
         } else if selectedDisplayMode == 1 {
-            einnahmen = getXActivityMonths(art: "Einnahmen", aktivitaeten: aktivitaeten,anzahl: 12)
-            ausgaben = getXActivityMonths(art: "Ausgaben", aktivitaeten: aktivitaeten,anzahl: 12)
+            einnahmen = berechnungen.getXActivityMonths(art: "Einnahmen", aktivitaeten: aktivitaeten,anzahl: 12)
+            ausgaben = berechnungen.getXActivityMonths(art: "Ausgaben", aktivitaeten: aktivitaeten,anzahl: 12)
         }else if selectedDisplayMode==2{
-            einnahmen = getActivityLastXDays(art: "Einnahmen", aktivitaeten: aktivitaeten, anzahl: 14)
-            ausgaben = getActivityLastXDays(art: "Ausgaben", aktivitaeten: aktivitaeten, anzahl: 14)
+            einnahmen = berechnungen.getActivityLastXDays(art: "Einnahmen", aktivitaeten: aktivitaeten, anzahl: 14)
+            ausgaben = berechnungen.getActivityLastXDays(art: "Ausgaben", aktivitaeten: aktivitaeten, anzahl: 14)
         }
 
         return (einnahmen, ausgaben)
     }
     
-    // Liefert eine Liste von der letzetn 10 Aktivitätsjahren zurück, basierend auf der Art der Aktivität und einer Liste von Aktivitäten
+    // Liefert eine Liste von der letzten 10 Aktivitätsjahren zurück, basierend auf der Art der Aktivität und einer Liste von Aktivitäten
     func getActivityYears(art:String,aktivitaeten: [Aktivitaet]) -> [Activity] {
         var activityYears: [Activity] = []
         let yearGroups = Dictionary(grouping: aktivitaeten, by: { getYear(from: $0.datum) })
@@ -299,75 +301,7 @@ struct AnalyseView: View {
         return activityYears
     }
 
-    // Liefert eine Liste von der letzten X Aktivitätsmonaten zurück, basierend auf der Art der Aktivität und einer Liste von Aktivitäten
-    func getXActivityMonths(art: String, aktivitaeten: [Aktivitaet],anzahl:Int) -> [Activity] {
-        var activityMonths: [Activity] = []
-        let monthGroups = Dictionary(grouping: aktivitaeten, by: { getMonth(from: $0.datum) })
-        let lastTwelveMonths = getXMonths(anzahl: anzahl)
-        
-        for month in lastTwelveMonths {
-            let monthString = month.prefix(3) + String(month.suffix(2))
-            let sum = monthGroups[month]?.reduce(0) { (result, activity) in
-                if activity.art == art {
-                    return result + activity.betrag
-                } else {
-                    return result
-                }
-            } ?? 0
-            let activityMonth = Activity(date: String(monthString), amount: sum)
-            activityMonths.append(activityMonth)
-        }
-        
-        return activityMonths
-    }
-    
-    // Liefert eine Liste von 14 Aktivitätstagen zurück, basierend auf der Art der Aktivität und einer Liste von Aktivitäten
-    func getActivityLastXDays(art: String, aktivitaeten: [Aktivitaet],anzahl:Int) -> [Activity] {
-        var activityDays: [Activity] = []
-        let dayGroups = Dictionary(grouping: aktivitaeten, by: { getDay(from: $0.datum) })
-        
-        let startDate = Calendar.current.date(byAdding: .day, value: -(anzahl+1), to: Date())!
-        let endDate = Date()
-
-        var lastXDays: [String] = []
-        var currentDate = startDate
-
-        while currentDate <= endDate {
-            let dayString = getDayDescription(from: currentDate)
-            lastXDays.append(dayString)
-            currentDate = Calendar.current.date(byAdding: .day, value: 1, to: currentDate)!
-        }
-
-        for day in lastXDays {
-            let sum = dayGroups[day]?.reduce(0) { (result, activity) in
-                if activity.art == art {
-                    return result + activity.betrag
-                } else {
-                    return result
-                }
-            } ?? 0
-            let activityDay = Activity(date: day, amount: sum)
-            activityDays.append(activityDay)
-        }
-
-        return activityDays
-    }
-
-
-    // Gibt ein Array von Monatsstrings für die letzten X Monate zurück.
-    func getXMonths(anzahl:Int) -> [String] {
-        var months: [String] = []
-        let calendar = Calendar.current
-        let currentDate = Date()
-        var dateComponents = DateComponents()
-        for i in 0..<anzahl {
-            dateComponents.month = -i
-            let monthDate = calendar.date(byAdding: dateComponents, to: currentDate)!
-            let monthString = getMonthDescription(from: monthDate)
-            months.append(monthString)
-        }
-        return months.reversed()
-    }
+   
     
     // Gibt das Jahr im Format "yyyy" (z.B. "2023") für den angegebenen Datumsstring zurück.
     func getYear(from date: String) -> String {
@@ -377,37 +311,5 @@ struct AnalyseView: View {
         let calendar = Calendar.current
         let year = calendar.component(.year, from: date)
         return String(year)
-    }
-
-    // Gibt den Monatsstring im Format "MMMyy" (z.B. "Apr23") für den angegebenen Datumsstring zurück.
-    func getMonth(from date: String) -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
-        let date = dateFormatter.date(from: date)!
-        dateFormatter.dateFormat = "MMMyy"
-        return dateFormatter.string(from: date)
-    }
-    
-    // Gibt den Monatsstring im Format "MMMyy" (z.B. "Apr23") für das angegebene Datum zurück.
-    func getMonthDescription(from date: Date) -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "MMMyy"
-        return dateFormatter.string(from: date)
-    }
-    
-    // Gibt das Tagesdatum im Format "dd.MM" (z.B. "29.04") für den angegebenen Datumsstring zurück.
-    func getDay(from date: String) -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ"
-        let date = dateFormatter.date(from: date)!
-        dateFormatter.dateFormat = "dd.MM.yyyy"
-        return "\(dateFormatter.string(from: date))"
-    }
-
-    // Gibt das Tagesdatum im Format "dd.MM" (z.B. "29.04") für das angegebene Datum zurück
-    func getDayDescription(from date: Date) -> String {
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "dd.MM.yyyy"
-        return "\(dateFormatter.string(from: date))"
     }
 }
