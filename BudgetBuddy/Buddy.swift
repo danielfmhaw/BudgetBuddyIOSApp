@@ -122,7 +122,7 @@ struct Buddy: View {
                     alles += "\r\n"
                 }
             }
-            messagesComp.append(alles)
+            messagesComp.append(getMessageFromAPI(kontext: "Das sind meine Einnahmen:"+alles, anfrage:"kannst du mir zu meinen Einnahmen Tipps geben?"))
         }else if message.lowercased().contains("ausg"){
             let ausgabenMessages = getBudgetInformation(art:"Ausgaben")
             for (index, message) in ausgabenMessages.enumerated() {
@@ -131,7 +131,7 @@ struct Buddy: View {
                     alles += "\r\n"
                 }
             }
-            messagesComp.append(alles)
+            messagesComp.append(getMessageFromAPI(kontext: "Das sind meine Ausgaben:"+alles, anfrage:"\n kannst du mir zu meinen Ausgaben Tipps geben?"))
         }else if message.lowercased().contains("limit"){
             let limitMessages = getLimitInformation()
             for (index, limitMessage) in limitMessages.enumerated() {
@@ -140,10 +140,9 @@ struct Buddy: View {
                     alles += "\r\n"
                 }
             }
-            messagesComp.append(alles)
+            messagesComp.append(getMessageFromAPI(kontext: "Das sind meine Limits:"+alles, anfrage:"kannst du mir zu meinen Limits Tipps geben?"))
         } else {
-            messagesComp.append(getMessageFromAPI(anfrage:message))
-
+            messagesComp.append(getMessageFromAPI(kontext: "", anfrage:message))
         }
     }
     
@@ -220,8 +219,8 @@ struct Buddy: View {
         return betragSumme
     }
 
-    func getMessageFromAPI(anfrage: String) -> String {
-        let urlString = "https://plebgpt.fly.dev/chat/\(anfrage)"
+    func getMessageFromAPI(kontext: String, anfrage: String) -> String {
+        let urlString = "https://plebgpt.fly.dev/chat/\(kontext)\(anfrage)"
         guard let url = URL(string: urlString.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? "") else {
             return "Ungültige URL"
         }
@@ -248,7 +247,7 @@ struct Buddy: View {
                 responseString = "Fehler: \(error)"
             }
             
-            if let data = data, let string = String(data: data, encoding: .utf8) {
+            if let data = data, let string = String(data: data, encoding: .nonLossyASCII) {
                 responseString = string
             }
             
@@ -258,6 +257,10 @@ struct Buddy: View {
         task.resume()
         semaphore.wait()
         
+        let charactersToRemove = CharacterSet(charactersIn: "\"\n")
+        responseString = responseString.components(separatedBy: charactersToRemove).joined(separator: "")
+        
         return responseString
     }
+
 }
