@@ -26,7 +26,7 @@ struct LimitAnalyseView: View {
     
        @State var showList: Bool = true
        @State private  var currentActiveItem: Item?
-       @State private var selectedOption = "Gesamt"
+       @State private var selectedOption = "Letzter Monat"
 
     
        @Environment(\.colorScheme) var colorScheme

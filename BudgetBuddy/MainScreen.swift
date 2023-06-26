@@ -337,7 +337,7 @@ struct LoggedInView: View {
                                                             .foregroundColor(Color.cyan)
                                                             .frame(width: 50, height: 50)
                                                         Circle()
-                                                            .trim(from: 0, to: CGFloat(limitAnalyse.aktuell / limit.betrag))
+                                                            .trim(from: 0, to: 1-CGFloat(limitAnalyse.aktuell / limit.betrag))
                                                             .stroke(limitAnalyse.ueberschuss >= 0 ? Color.green : Color.red, lineWidth: 5)
                                                             .frame(width: 50, height: 50)
                                                             .rotationEffect(.degrees(-90))
@@ -871,8 +871,10 @@ struct LoggedInView: View {
                             self.aktivitaeten.remove(at: index)
                         }
                     }
-                    self.kategorieneinnahmen = berechnungen.fetchActivityByCategory(art: "Einnahmen",aktivitaeten: aktivitaeten)
-                    self.kategorienausgaben = berechnungen.fetchActivityByCategory(art: "Ausgaben",aktivitaeten: aktivitaeten)
+                    
+                    //Nur den letzten Monat
+                    self.kategorieneinnahmen = berechnungen.fetchActivityByCategory(art: "Einnahmen",aktivitaeten: berechnungen.getXAktivitaetenMonths(art: "Einnahmen", aktivitaeten:aktivitaeten, anzahl: 1))
+                    self.kategorienausgaben = berechnungen.fetchActivityByCategory(art: "Ausgaben",aktivitaeten: berechnungen.getXAktivitaetenMonths(art: "Ausgaben", aktivitaeten:aktivitaeten, anzahl: 1))
                     fetchLimits()
                 }
             } else {
@@ -913,8 +915,8 @@ struct LoggedInView: View {
                     let deletedLimitIds = existingLimitIds.filter { !decodedLimitIds.contains($0) }
                     self.limits.removeAll { deletedLimitIds.contains($0.id) }
                     
-                    
-                    limitAnalysen=berechnungen.createLimitAnalysen(aktivitaeten: aktivitaeten, limits: limits)
+                    // LimitAnalysen des letzten Monats
+                    limitAnalysen=berechnungen.createLimitAnalysen(aktivitaeten: berechnungen.getXAktivitaetenMonths(art: "Ausgaben", aktivitaeten:aktivitaeten, anzahl: 1), limits: limits)
                 }
             } else {
                 print("Failed to decode response data")

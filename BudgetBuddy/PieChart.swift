@@ -23,7 +23,7 @@ struct Kreisdiagramm: View {
            createPieChart().1
     }
     
-    @State private var selectedOption = "Gesamt"
+    @State private var selectedOption = "Letzter Monat"
     
     // Farben der "Stücke"
     let farbenListe: [Color] = [.red, .green, .blue, .orange, .yellow, .pink, .purple,.cyan, .teal, .indigo, .mint]
